@@ -53,6 +53,14 @@ Chaque ressource a une quantité en stock (une salle ou un véhicule compte pour
 - Dans « Ma sélection », on choisit le nombre d’exemplaires ; la demande est refusée si le stock ne suffit pas sur la période (les demandes en attente et les retards comptent).
 - Au retour, un exemplaire endommagé part en réparation et un exemplaire perdu est retiré du stock ; le gestionnaire ajuste la quantité et le nombre en réparation dans **Ressources**.
 
+## Catégories et validation
+
+Une catégorie regroupe des ressources (c’est un filtre du catalogue) et fixe la règle de validation par défaut. Dans **Gestion › Catégories** :
+
+- renommer une catégorie (crayon), la supprimer si elle est vide, activer ou non la validation par défaut ;
+- ouvrir une catégorie pour voir ses ressources et choisir, pour chacune, « Comme la catégorie », « Toujours sur validation » ou « Toujours en accès direct » ;
+- la même règle se règle aussi dans le formulaire d’une ressource.
+
 ## Suivi (gestionnaire)
 
 L’onglet **Gestion › Suivi** répond à « qu’est-ce qui est sorti, et chez qui ? » :

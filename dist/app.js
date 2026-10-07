@@ -31,6 +31,8 @@ const icons = {
   list: "M8 6h13 M8 12h13 M8 18h13 M3 6h.01 M3 12h.01 M3 18h.01",
   edit: "M4 20h4L19 9l-4-4L4 16z M14 6l4 4",
   inbox: "M3 13h5l1 3h6l1-3h5 M5 5h14l2 8v6H3v-6z",
+  trash: "M4 7h16 M9 7V4h6v3 M6 7l1 13h10l1-13 M10 11v6 M14 11v6",
+  chevD: "m6 9 6 6 6-6",
 };
 const ico = (n, cls = "") =>
   `<svg class="icon ${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="${icons[n] || icons.box}"/></svg>`;
@@ -230,6 +232,8 @@ let role = "student",
   statusFilter = "",
   reqFilter = "all",
   trackFilter = "all",
+  openCats = [],
+  renamingCat = null,
   cart = {},
   planView = mobile.matches ? "day" : "week",
   planDate = dayStart(new Date()),
@@ -240,6 +244,8 @@ let role = "student",
 /* ---------- Sélecteurs métier ---------- */
 const resource = (id) => db.resources.find((r) => r.id === id);
 const cat = (id) => db.categories.find((c) => c.id === id);
+// Règle de validation : celle de la ressource si elle en a une, sinon celle de sa catégorie.
+const needsApproval = (r) => (typeof r?.approval === "boolean" ? r.approval : !!cat(r?.cat)?.approval);
 const reservables = () => db.resources.filter((r) => reserve(r.type) && !r.retired);
 const palette = ["#662483", "#e71d73", "#258695", "#a83fde", "#c90d58", "#2db8c5", "#7a2a9f", "#fd69b4"];
 const colorOf = (id) => {
@@ -665,19 +671,67 @@ const views = {
   },
 
   categories() {
+    const ruleOptions = (r) => {
+      const c = cat(r.cat);
+      const v = typeof r.approval === "boolean" ? String(r.approval) : "inherit";
+      return [
+        ["inherit", `Comme la catégorie (${c?.approval ? "validation" : "accès direct"})`],
+        ["true", "Toujours sur validation"],
+        ["false", "Toujours en accès direct"],
+      ]
+        .map(([k, t]) => `<option value="${k}" ${v === k ? "selected" : ""}>${t}</option>`)
+        .join("");
+    };
     return (
       head(
         "Catégories",
-        "Choisissez les catégories dont les demandes doivent être validées par l’accueil.",
-        `<button class="btn primary" data-action="add-category">${ico("plus")} Ajouter une catégorie</button>`,
+        "Rangez le catalogue et décidez de ce qui doit être validé par l’accueil.",
+        `<button class="btn primary" data-action="add-category">${ico("plus")} Nouvelle catégorie</button>`,
       ) +
-      `<section class="panel flush">${db.categories
-        .map(
-          (c) => `<div class="category-row"><div><b>${esc(c.name)}</b><small>${db.resources.filter((r) => r.cat === c.id && !r.retired).length} ressource(s)</small></div>
-          <label class="switch"><input type="checkbox" data-cat="${c.id}" ${c.approval ? "checked" : ""}><span class="track"><span></span></span><span class="switch-label">Validation requise</span></label></div>`,
-        )
-        .join("")}</section>
-      <p class="hint">La règle s’applique aux nouvelles demandes. Une demande contenant au moins une ressource soumise à validation est mise en attente.</p>`
+      `<div class="explain">
+        <div><b>${ico("tag")} Une catégorie regroupe des ressources</b><span>Elle sert de filtre dans le catalogue.</span></div>
+        <div><b>${ico("shield")} Elle fixe la règle par défaut</b><span>Avec validation, les demandes attendent l’accord de l’accueil.</span></div>
+        <div><b>${ico("settings")} Chaque ressource peut faire exception</b><span>Ouvrez une catégorie pour régler ressource par ressource.</span></div>
+      </div>
+      <div class="cat-list">${db.categories
+        .map((c) => {
+          const items = db.resources.filter((r) => r.cat === c.id && !r.retired);
+          const exceptions = items.filter((r) => typeof r.approval === "boolean" && r.approval !== !!c.approval).length;
+          const open = openCats.includes(c.id);
+          const title =
+            renamingCat === c.id
+              ? `<form class="cat-rename" data-rename-form="${c.id}"><input name="name" value="${esc(c.name)}" maxlength="70" aria-label="Nouveau nom" required><button class="btn small primary">Enregistrer</button><button type="button" class="btn small" data-rename-cancel>Annuler</button></form>`
+              : `<button class="cat-toggle" data-cat-open="${c.id}" aria-expanded="${open}">${ico("chevD", "chev")}<span><b>${esc(c.name)}</b><small>${items.length} ressource${items.length > 1 ? "s" : ""}${exceptions ? ` · ${exceptions} exception${exceptions > 1 ? "s" : ""}` : ""}</small></span></button>`;
+          return `<section class="cat-card ${open ? "open" : ""}">
+            <div class="cat-head">
+              ${title}
+              <div class="cat-tools">
+                <label class="switch"><input type="checkbox" data-cat="${c.id}" ${c.approval ? "checked" : ""}><span class="track"><span></span></span><span class="switch-label">Validation par défaut</span></label>
+                ${renamingCat === c.id ? "" : `<button class="icon-btn ghost" data-rename="${c.id}" aria-label="Renommer ${esc(c.name)}" title="Renommer">${ico("edit")}</button>`}
+                <button class="icon-btn ghost" data-cat-delete="${c.id}" aria-label="Supprimer ${esc(c.name)}" title="${items.length ? "Videz la catégorie pour la supprimer" : "Supprimer"}" ${items.length ? "disabled" : ""}>${ico("trash")}</button>
+              </div>
+            </div>
+            ${
+              open
+                ? `<div class="cat-body">${
+                    items.length
+                      ? items
+                          .map(
+                            (r) => `<div class="cat-item">
+                    <span class="res-icon">${ico(r.icon)}</span>
+                    <span class="cat-item-name"><b>${esc(r.name)}</b><small>${esc(r.code)}${typeof r.approval === "boolean" && r.approval !== !!c.approval ? ` · <em>exception</em>` : ""}</small></span>
+                    <select data-res-rule="${r.id}" aria-label="Règle de validation pour ${esc(r.name)}">${ruleOptions(r)}</select>
+                  </div>`,
+                          )
+                          .join("")
+                      : `<p class="muted cat-empty">Aucune ressource. Choisissez cette catégorie en modifiant une ressource.</p>`
+                  }</div>`
+                : ""
+            }
+          </section>`;
+        })
+        .join("")}</div>
+      <p class="hint">Les règles s’appliquent aux nouvelles demandes. Une demande contenant au moins une ressource sur validation est mise en attente.</p>`
     );
   },
 
@@ -1004,7 +1058,7 @@ function catalogCards() {
         <p class="rc-meta">${ico("pin")}${esc(r.location)}</p>
         ${book ? dayLine(r) : stockLine(r, free, out && r.status === "available" ? backNote : "")}
         ${role === "admin" ? holderLine(r) : ""}
-        <div class="rc-foot"><span class="rc-cat">${esc(c?.name)}${c?.approval ? `<em>Sur validation</em>` : ""}</span>${action}</div>
+        <div class="rc-foot"><span class="rc-cat">${esc(c?.name)}${needsApproval(r) ? `<em>Sur validation</em>` : ""}</span>${action}</div>
       </article>`;
     })
     .join("")}</div>`;
@@ -1337,7 +1391,7 @@ function openBooking({ resId, date, hour } = {}) {
     else if (new Date(end) <= new Date(start)) (msg = "L’heure de fin doit être après l’heure de début."), (tone = "error");
     else if (clash)
       (msg = clash.start ? `Déjà réservé de ${hhmm(clash.start)} à ${hhmm(clash.end)}. Choisissez un autre horaire.` : "Cet espace n’est pas disponible."), (tone = "error");
-    else if (cat(r.cat)?.approval) (msg = "Créneau libre. Cette réservation sera validée par l’accueil."), (tone = "info");
+    else if (needsApproval(r)) (msg = "Créneau libre. Cette réservation sera validée par l’accueil."), (tone = "info");
     else (msg = "Créneau libre. La réservation est confirmée immédiatement."), (tone = "ok");
     note.textContent = msg;
     note.className = `form-note ${tone}`;
@@ -1356,7 +1410,7 @@ function openBooking({ resId, date, hour } = {}) {
       form.purpose.focus();
       return;
     }
-    const status = cat(r.cat)?.approval ? "pending" : "approved";
+    const status = needsApproval(r) ? "pending" : "approved";
     const req = {
       id: Math.max(1000, ...db.requests.map((q) => q.id)) + 1,
       ids: [r.id],
@@ -1400,7 +1454,7 @@ function availStrip(r, date, start, end) {
 /* ---------- Sélection de matériel (emprunt) ---------- */
 function openCart() {
   const items = cartIds().map(resource).filter(Boolean);
-  const needsApproval = items.some((r) => cat(r.cat)?.approval);
+  const mustValidate = items.some(needsApproval);
   modal(
     "Ma sélection",
     items.length
@@ -1415,7 +1469,7 @@ function openCart() {
         <div class="form-row"><label class="field">Retrait<input name="start" type="datetime-local" required value="${stamp(1)}" min="${stamp(0, 0)}"></label><label class="field">Retour<input name="end" type="datetime-local" required value="${stamp(3, 18)}"></label></div>
         ${role === "professor" ? '<label class="field">Groupe ou classe <span class="opt">facultatif</span><input name="group" placeholder="Ex. B2 Création digitale" maxlength="80"></label>' : ""}
         <label class="field">Pour quel projet ?<textarea name="purpose" rows="2" required placeholder="Quelques mots suffisent" maxlength="300"></textarea></label>
-        <p class="form-note ${needsApproval ? "info" : "ok"}">${needsApproval ? "Une partie du matériel doit être validée par l’accueil. Vous recevrez une réponse sous 24 h." : "Le matériel est réservé dès l’envoi. Retrait à l’accueil du bâtiment A."}</p>
+        <p class="form-note ${mustValidate ? "info" : "ok"}">${mustValidate ? "Une partie du matériel doit être validée par l’accueil. Vous recevrez une réponse sous 24 h." : "Le matériel est réservé dès l’envoi. Retrait à l’accueil du bâtiment A."}</p>
         <p id="form-error" class="form-note error" role="alert" hidden></p>
       </form>`
       : `<div class="modal-body">${empty("Votre sélection est vide.", `<button class="btn small" data-close data-nav="catalog">Parcourir le catalogue</button>`)}</div>`,
@@ -1496,7 +1550,7 @@ function submitLoan(e) {
     pop(el);
     return;
   }
-  const status = ids.some((id) => cat(resource(id).cat).approval) ? "pending" : "approved";
+  const status = ids.some((id) => needsApproval(resource(id))) ? "pending" : "approved";
   db.requests.push({
     id: Math.max(1000, ...db.requests.map((r) => r.id)) + 1,
     ids,
@@ -1654,7 +1708,14 @@ function editResource(id) {
       <label class="field">Nom<input name="name" value="${esc(r.name)}" required maxlength="100"></label>
       <div class="form-row"><label class="field">Référence<input name="code" value="${esc(r.code)}" required maxlength="50"></label>
       <label class="field">Type<select name="type" ${id ? "disabled" : ""}>${Object.entries(types).map(([k, t]) => `<option value="${k}" ${r.type === k ? "selected" : ""}>${t}</option>`).join("")}</select></label></div>
-      <label class="field">Catégorie<select name="cat">${db.categories.map((c) => `<option value="${c.id}" ${r.cat === c.id ? "selected" : ""}>${esc(c.name)}</option>`).join("")}</select></label>
+      <div class="form-row"><label class="field">Catégorie<select name="cat">${db.categories.map((c) => `<option value="${c.id}" ${r.cat === c.id ? "selected" : ""}>${esc(c.name)}</option>`).join("")}</select></label>
+      <label class="field">Validation<select name="approval">${[
+        ["inherit", "Comme la catégorie"],
+        ["true", "Toujours sur validation"],
+        ["false", "Toujours en accès direct"],
+      ]
+        .map(([k, t]) => `<option value="${k}" ${(typeof r.approval === "boolean" ? String(r.approval) : "inherit") === k ? "selected" : ""}>${t}</option>`)
+        .join("")}</select></label></div>
       <label class="field">Emplacement<input name="location" value="${esc(r.location)}" required maxlength="120" placeholder="Ex. Bâtiment A · 24 places"></label>
       <div class="form-row stock-fields"><label class="field">Quantité en stock<input name="qty" type="number" min="1" max="999" value="${stock(r) || 1}" required></label>
       <label class="field">Dont en réparation<input name="maint" type="number" min="0" max="999" value="${r.maint || 0}"></label></div>
@@ -1671,6 +1732,9 @@ function editResource(id) {
   $("#resource-form").onsubmit = (e) => {
     e.preventDefault();
     const values = Object.fromEntries(new FormData(e.target));
+    const rule = values.approval;
+    delete values.approval;
+    if (rule !== "inherit") values.approval = rule === "true";
     const type = id ? r.type : values.type;
     if (reserve(type)) {
       values.qty = 1;
@@ -1689,7 +1753,10 @@ function editResource(id) {
       $("#resource-error").textContent = "Cette référence est déjà utilisée.";
       return;
     }
-    if (id) Object.assign(r, values);
+    if (id) {
+      Object.assign(r, values);
+      if (rule === "inherit") delete r.approval;
+    }
     else
       db.resources.push({
         ...values,
@@ -1832,19 +1899,110 @@ function bind() {
     statusFilter = e.target.value;
     refreshCatalog();
   });
-  $$("[data-cat]").forEach(
-    (c) =>
-      (c.onchange = () => {
-        if (role !== "admin") return;
-        cat(c.dataset.cat).approval = c.checked;
-        persist(`Règle de validation modifiée : ${cat(c.dataset.cat).name}`);
-        toast(c.checked ? "Les nouvelles demandes devront être validées." : "Les nouvelles demandes seront acceptées directement.");
-      }),
-  );
+  if (view === "categories") bindCategories();
   bindCards();
   bindSlots();
   if (view === "planning") bindPlan();
   if (view === "tracking") bindTracking();
+}
+
+function bindCategories() {
+  if (role !== "admin") return;
+  const rerender = () => {
+    const y = scrollY;
+    render();
+    scrollTo(0, y);
+  };
+  $$("[data-cat]").forEach(
+    (c) =>
+      (c.onchange = () => {
+        const k = cat(c.dataset.cat);
+        k.approval = c.checked;
+        persist(`Règle de validation modifiée : ${k.name}`);
+        toast(c.checked ? `${k.name} : les demandes seront validées par l’accueil.` : `${k.name} : accès direct, sans validation.`);
+        rerender();
+      }),
+  );
+  $$("[data-cat-open]").forEach(
+    (b) =>
+      (b.onclick = () => {
+        const id = b.dataset.catOpen;
+        openCats = openCats.includes(id) ? openCats.filter((x) => x !== id) : [...openCats, id];
+        rerender();
+        const body = $(`[data-cat-open="${id}"]`)?.closest(".cat-card")?.querySelector(".cat-body");
+        if (body) reveal($$(".cat-item", body), { y: 6, step: 30, duration: 300 });
+      }),
+  );
+  $$("[data-res-rule]").forEach(
+    (sel) =>
+      (sel.onchange = () => {
+        const r = resource(+sel.dataset.resRule);
+        if (sel.value === "inherit") delete r.approval;
+        else r.approval = sel.value === "true";
+        persist(`Règle de validation de ${r.name} : ${sel.options[sel.selectedIndex].text.toLowerCase()}`);
+        toast(`${r.name} : ${needsApproval(r) ? "sur validation" : "accès direct"}.`);
+        rerender();
+      }),
+  );
+  $$("[data-rename]").forEach(
+    (b) =>
+      (b.onclick = () => {
+        renamingCat = b.dataset.rename;
+        rerender();
+        const input = $(`[data-rename-form="${renamingCat}"] input`);
+        input.focus();
+        input.select();
+      }),
+  );
+  $$("[data-rename-cancel]").forEach(
+    (b) =>
+      (b.onclick = () => {
+        renamingCat = null;
+        rerender();
+      }),
+  );
+  $$("[data-rename-form]").forEach(
+    (f) =>
+      (f.onsubmit = (e) => {
+        e.preventDefault();
+        const k = cat(f.dataset.renameForm),
+          name = f.name.value.trim();
+        if (!name) return;
+        if (db.categories.some((c) => c.id !== k.id && c.name.toLowerCase() === name.toLowerCase())) {
+          toast("Une autre catégorie porte déjà ce nom.", "warn");
+          return;
+        }
+        const old = k.name;
+        k.name = name;
+        renamingCat = null;
+        if (old !== name) persist(`Catégorie renommée : ${old} → ${name}`);
+        rerender();
+        if (old !== name) toast(`Catégorie renommée en « ${name} ».`);
+      }),
+  );
+  $$("[data-rename-form] input").forEach(
+    (i) =>
+      (i.onkeydown = (e) => {
+        if (e.key === "Escape") {
+          e.preventDefault();
+          renamingCat = null;
+          rerender();
+        }
+      }),
+  );
+  $$("[data-cat-delete]").forEach(
+    (b) =>
+      (b.onclick = () => {
+        const k = cat(b.dataset.catDelete);
+        if (db.resources.some((r) => r.cat === k.id && !r.retired)) return;
+        if (!confirm(`Supprimer la catégorie « ${k.name} » ?`)) return;
+        db.categories = db.categories.filter((c) => c.id !== k.id);
+        if (category === k.id) category = "";
+        persist(`Catégorie supprimée : ${k.name}`);
+        rerender();
+        toast("Catégorie supprimée.");
+      }),
+  );
 }
 
 function bindCards() {
