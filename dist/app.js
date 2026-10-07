@@ -1,49 +1,1593 @@
-const icons={grid:'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',box:'m12 3 9 5v9l-9 5-9-5V8z M3 8l9 5 9-5 M12 13v9 M7 5l10 6',calendar:'M5 5h14a2 2 0 012 2v13H3V7a2 2 0 012-2 M7 3v4 M17 3v4 M3 10h18 M7 14h3 M14 14h3',clock:'M12 8v5l3 2 M21 12a9 9 0 11-18 0 9 9 0 0118 0',check:'m5 12 4 4L19 6',arrow:'M5 12h14 m-5-5 5 5-5 5',plus:'M12 5v14 M5 12h14',search:'M16 16l5 5 M18 10a8 8 0 11-16 0 8 8 0 0116 0',laptop:'M5 4h14v12H5z M2 20h20l-3-4H5z',camera:'M3 7h5l2-3h4l2 3h5v13H3z M16 13a4 4 0 11-8 0 4 4 0 018 0',key:'M14 9a5 5 0 11-10 0 5 5 0 0110 0 M12 12l9 9 M17 17l3-3',room:'M4 21V3h16v18 M2 21h20 M8 21V7h8v14 M13 13h.1',car:'m3 11 3-7h12l3 7v8H3z M3 11h18 M7 15h1 M16 15h1 M5 19v2 M19 19v2',code:'m8 6-6 6 6 6 M16 6l6 6-6 6 M14 3l-4 18',vr:'M3 7h18v11h-6l-3-3-3 3H3z M7 11h1 M16 11h1',bell:'M5 17h14l-2-3V9a5 5 0 00-10 0v5z M10 21h4',settings:'M4 7h16 M4 17h16 M8 4v6 M16 14v6',users:'M16 21v-3a4 4 0 00-4-4H6a4 4 0 00-4 4v3 M13 6a4 4 0 11-8 0 4 4 0 018 0 M17 3a4 4 0 010 8 M22 21v-3a4 4 0 00-4-4',close:'m6 6 12 12 M6 18 18 6',bag:'M5 7h14l2 14H3z M8 9V6a4 4 0 018 0v3',history:'M3 11a9 9 0 119 10 M3 4v7h7 M12 7v6l4 2',shield:'m12 2 9 4v6c0 5-9 10-9 10S3 17 3 12V6z m-4 10 3 3 5-6'};
-const ico=n=>`<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="${icons[n]||icons.box}"/></svg>`;
-const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const types={physical:'Matériel',key:'Clés',license:'Licences',room:'Salles',amphi:'Amphithéâtre',vehicle:'Véhicules'};
-const reserve=t=>['room','amphi','vehicle'].includes(t);
-const stamp=(days,h=9)=>{const d=new Date();d.setDate(d.getDate()+days);d.setHours(h,0,0,0);return new Date(d-d.getTimezoneOffset()*60000).toISOString().slice(0,16)};
-const seed=()=>({categories:[{id:'it',name:'Informatique',approval:false},{id:'av',name:'Audiovisuel',approval:true},{id:'vr',name:'Réalité virtuelle',approval:true},{id:'access',name:'Clés & accès',approval:false},{id:'soft',name:'Logiciels',approval:false},{id:'spaces',name:'Espaces de travail',approval:false},{id:'transport',name:'Véhicules',approval:true}],resources:[{id:1,name:'MacBook Pro 14″',code:'MDS-PC-001',type:'physical',cat:'it',icon:'laptop',status:'available',location:'Accueil · Bâtiment A'},{id:2,name:'Canon EOS R50',code:'MDS-CAM-002',type:'physical',cat:'av',icon:'camera',status:'available',location:'Studio · Bâtiment B'},{id:3,name:'Meta Quest 3',code:'MDS-VR-003',type:'physical',cat:'vr',icon:'vr',status:'available',location:'Lab immersif'},{id:4,name:'Salle 204 — Créativité',code:'MDS-SAL-204',type:'room',cat:'spaces',icon:'room',status:'available',location:'Bâtiment A · 24 places'},{id:5,name:'Adobe Creative Cloud',code:'MDS-LIC-005',type:'license',cat:'soft',icon:'code',status:'available',location:'Licence nominative · 1 poste'},{id:6,name:'Clé du studio photo',code:'MDS-CLE-006',type:'key',cat:'access',icon:'key',status:'available',location:'Accueil · Bâtiment B'},{id:7,name:'Amphithéâtre des Alpes',code:'MDS-AMP-001',type:'amphi',cat:'spaces',icon:'room',status:'available',location:'Rez-de-chaussée · 120 places'},{id:8,name:'Renault Kangoo',code:'MDS-VEH-001',type:'vehicle',cat:'transport',icon:'car',status:'available',location:'Parking du campus'},{id:9,name:'Dell Latitude 5440',code:'MDS-PC-009',type:'physical',cat:'it',icon:'laptop',status:'maintenance',location:'Service informatique'},{id:10,name:'Kit câbles & adaptateurs',code:'MDS-ACC-010',type:'physical',cat:'it',icon:'box',status:'available',location:'Accueil · Bâtiment A'}],requests:[{id:1001,ids:[1],user:'student',name:'Alex Martin',kind:'loan',start:stamp(-3),end:stamp(2,18),status:'approved',purpose:'Projet de fin de semestre',created:stamp(-3)},{id:1002,ids:[2],user:'professor',name:'Camille Laurent',kind:'loan',start:stamp(1),end:stamp(3,18),status:'pending',group:'B2 Création digitale',purpose:'Atelier photo',created:stamp(-1)},{id:1003,ids:[4],user:'student',name:'Alex Martin',kind:'booking',start:stamp(1,14),end:stamp(1,16),status:'approved',purpose:'Travail en groupe',created:stamp(-1)},{id:1004,ids:[3],user:'professor',name:'Camille Laurent',kind:'loan',start:stamp(-5),end:stamp(-1,18),status:'approved',purpose:'Atelier immersif',created:stamp(-5)}],events:[{text:'Réservation de la salle 204 confirmée',at:stamp(-1)},{text:'Nouvelle demande de Camille Laurent',at:stamp(-1)},{text:'MacBook Pro 14″ remis à Alex Martin',at:stamp(-3)}]});
-let db;try{db=JSON.parse(localStorage.getItem('mds-campus-v1'))||seed()}catch{db=seed()}
-let role='student',view='dashboard',filter='all',query='',category='',statusFilter='',cart={loan:[],booking:[]},cartKind='loan';
-const users={admin:{name:'Sophie Dubois',label:'Gestionnaire',initials:'SD'},student:{name:'Alex Martin',label:'Étudiant',initials:'AM'},professor:{name:'Camille Laurent',label:'Professeur',initials:'CL'}};
-const labels={available:'Disponible',borrowed:'Emprunté',reserved:'Réservé',maintenance:'En maintenance',unavailable:'Indisponible',pending:'En attente',approved:'Validée',late:'En retard',active:'En cours',returned:'Retournée',finished:'Terminée',cancelled:'Annulée',rejected:'Refusée'};
-const fmt=(d,time=false)=>new Date(d).toLocaleDateString('fr-FR',{day:'numeric',month:'short',...(time?{hour:'2-digit',minute:'2-digit'}:{})});
-const resource=id=>db.resources.find(r=>r.id===id);
-const cat=id=>db.categories.find(c=>c.id===id);
-const reqStatus=r=>r.status==='approved'?(r.kind==='loan'&&new Date(r.end)<new Date()?'late':new Date(r.start)<=new Date()?(r.kind==='booking'&&new Date(r.end)<new Date()?'finished':'active'):'approved'):r.status;
-const resStatus=r=>r.status!=='available'?r.status:db.requests.some(q=>q.ids.includes(r.id)&&q.status==='approved'&&new Date(q.start)<=new Date()&&(q.kind==='loan'||new Date(q.end)>new Date()))?'borrowed':db.requests.some(q=>q.ids.includes(r.id)&&['pending','approved'].includes(q.status)&&new Date(q.end)>new Date())?'reserved':'available';
-const badge=s=>`<span class="badge ${s}">${labels[s]||s}</span>`;
-const mine=()=>db.requests.filter(r=>role==='admin'||r.user===role);
-function persist(text){if(text)db.events.unshift({text,at:new Date().toISOString()});try{localStorage.setItem('mds-campus-v1',JSON.stringify(db))}catch{toast('Stockage local indisponible : session non sauvegardée.')}}
-function toast(t){const el=document.querySelector('#toast');el.textContent=t;el.classList.add('show');clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>el.classList.remove('show'),3500)}
-function navigate(v){view=v;query='';render()}
-const nav=(v,n,i,count='')=>`<button data-nav="${v}" class="${view===v?'active':''}">${ico(i)}<span>${n}</span>${count?`<span class="count">${count}</span>`:''}</button>`;
-function render(){if(role!=='admin'&&['categories','manage','approvals'].includes(view))view='dashboard';const u=users[role];document.querySelector('#sidebar').innerHTML=`<div class="brand"><span class="brandmark">c</span><span>campus<span style="color:var(--purple)">.</span></span></div><div class="nav-label">Espace de travail</div><nav>${nav('dashboard','Vue d’ensemble','grid')}${nav('catalog','Catalogue','box')}${nav('requests',role==='admin'?'Les demandes':'Mes demandes','bag')}${nav('planning','Réservations','calendar')}${nav('history','Historique','history')}${role==='admin'?`<div class="nav-label">Administration</div>${nav('approvals','À valider','shield',db.requests.filter(r=>r.status==='pending').length)}${nav('manage','Ressources','settings')}${nav('categories','Catégories','grid')}`:''}</nav><div class="side-bottom"><div class="profile"><div class="avatar">${u.initials}</div><div><b>${u.name}</b><small>${u.label}</small></div></div></div>`;
-const titles={dashboard:'Vue d’ensemble',catalog:'Catalogue',requests:role==='admin'?'Les demandes':'Mes demandes',planning:'Réservations',history:'Historique',approvals:'Demandes à valider',manage:'Gestion des ressources',categories:'Catégories'};
-document.querySelector('#topbar').innerHTML=`<div class="breadcrumb"><span>Espace de travail</span><span>/</span><b>${titles[view]}</b></div><div class="header-right"><label class="role"><span>Vue de démonstration</span><select id="role" aria-label="Changer de rôle">${Object.entries(users).map(([k,u])=>`<option value="${k}" ${role===k?'selected':''}>${u.label}</option>`).join('')}</select></label><button class="icon-btn" data-action="cart" aria-label="Ouvrir le panier">${ico('bag')}<small>${cart.loan.length+cart.booking.length||''}</small></button><div class="avatar">${u.initials}</div></div>`;
-const head=(title,sub,action='')=>`<div class="page-heading"><div><h1>${title}</h1><p class="subtitle">${sub}</p></div>${action}</div>`;
-const newBtn=`<button class="primary" data-nav="catalog">${ico('plus')} Nouvelle demande</button>`;
-let html='';if(view==='dashboard'){const active=mine().filter(r=>['active','late'].includes(reqStatus(r)));html=head(`Bonjour ${u.name.split(' ')[0]} <span style="font-size:24px">☀</span>`,role==='admin'?'Voici ce qui se passe sur votre campus aujourd’hui.':'Tout ce dont vous avez besoin pour vos projets.',newBtn)+`<div class="stats">${[[db.resources.filter(r=>!r.retired).length,'Ressources au catalogue','box','Toutes les ressources du campus',''],[db.resources.filter(r=>!r.retired&&resStatus(r)==='available').length,'Disponibles maintenant','check','Prêtes pour vos prochains projets','green'],[active.length,'Emprunts en cours','clock','Un suivi, du départ au retour',''],[mine().filter(r=>r.status==='pending').length,'Demandes en attente','calendar','À examiner par le gestionnaire','orange']].map(([n,t,i,s,c])=>`<div class="stat"><div class="stat-top">${t}<span class="stat-icon ${c}">${ico(i)}</span></div><strong>${String(n).padStart(2,'0')}</strong><small>${s}</small></div>`).join('')}</div><div class="dashboard-grid"><div><div class="welcome"><div><span class="eyebrow">Vos projets commencent ici</span><h2>Une idée ? On a les ressources.</h2><p>Matériel, salles, logiciels… trouvez ce qu’il vous faut.</p></div><button class="primary" data-nav="catalog">Explorer le catalogue ${ico('arrow')}</button></div><section class="panel section-space"><div class="panel-head"><div><h2>Demandes récentes</h2><p>Gardez un œil sur les derniers mouvements.</p></div><button class="text-btn" data-nav="requests">Tout voir →</button></div>${requestTable(mine().slice().reverse().slice(0,4),true)}</section><section class="panel section-space"><div class="panel-head"><div><h2>Prochaines réservations</h2><p>Les espaces et ressources mobilisés prochainement.</p></div><button class="text-btn" data-nav="planning">Voir le planning →</button></div>${bookingList(mine().filter(r=>r.kind==='booking'&&r.status==='approved'&&new Date(r.end)>new Date()).slice(0,2))}</section></div><div><section class="panel"><div class="panel-head"><h2>Accès rapides</h2></div>${[['loan','Emprunter du matériel','Pour donner vie à vos idées','laptop'],['booking','Réserver un espace','Un lieu pour vos projets','calendar'],['history','Consulter l’historique','Chaque mouvement, une trace','history']].map(([a,t,s,i])=>`<button class="quick" data-action="${a}"><span class="stat-icon">${ico(i)}</span><span><b>${t}</b><small>${s}</small></span>${ico('arrow')}</button>`).join('')}</section><section class="panel activity"><h2>Activité récente</h2>${(role==='admin'?db.events:mine().map(r=>({text:`Demande #${r.id} · ${labels[reqStatus(r)]}`,at:r.created}))).slice(0,4).map(e=>`<div class="event"><span class="event-mark">${ico('check')}</span><div><p>${esc(e.text)}</p><small>${fmt(e.at,true)}</small></div></div>`).join('')}</section><div class="notice section-space">${ico('shield')} <b>Une traçabilité partagée</b><br>Chaque emprunt et chaque retour sont enregistrés pour un campus bien organisé.</div></div></div>`}
-else if(['catalog','manage'].includes(view)){html=head(view==='manage'?'Les ressources du campus':'À chaque projet, sa ressource',view==='manage'?'Ajoutez et gérez les ressources mises à disposition.':'Explorez, sélectionnez, et donnez vie à vos projets.',view==='manage'?`<button class="primary" data-action="add-resource">${ico('plus')} Ajouter une ressource</button>`:`<button class="primary" data-action="cart">${ico('bag')} Mon panier (${cart.loan.length+cart.booking.length})</button>`)+`<div class="tabs">${[['all','Toutes les ressources'],['loan','À emprunter'],['booking','À réserver']].map(([v,t])=>`<button data-filter="${v}" class="${filter===v?'active':''}">${t}</button>`).join('')}</div><div class="toolbar"><label class="search">${ico('search')}<input id="search" placeholder="Rechercher une ressource, une référence…" value="${esc(query)}"></label><select id="category" aria-label="Catégorie"><option value="">Toutes les catégories</option>${db.categories.map(c=>`<option value="${c.id}" ${category===c.id?'selected':''}>${esc(c.name)}</option>`).join('')}</select><select id="status-filter" aria-label="Disponibilité"><option value="">Tous les états</option>${['available','borrowed','reserved','maintenance','unavailable'].map(s=>`<option value="${s}" ${s===statusFilter?'selected':''}>${labels[s]}</option>`).join('')}</select></div><div id="catalog-results">${catalogCards()}</div>`}
-else if(['requests','approvals','history'].includes(view)){const list=mine().filter(r=>view!=='approvals'||r.status==='pending');html=head(titles[view],view==='history'?'L’ensemble des demandes et de leurs mouvements.':view==='approvals'?'Vérifiez les demandes qui nécessitent votre accord.':'Suivez les emprunts et les réservations du campus.',newBtn)+`<section class="panel">${requestTable(list.slice().reverse())}</section>`;if(view==='history')html+=`<section class="panel section-space"><div class="panel-head"><h2>Journal des mouvements</h2></div><div class="calendar-list">${(role==='admin'?db.events:[]).slice(0,30).map(e=>`<div class="booking-line"><small>${fmt(e.at,true)}</small><span>${esc(e.text)}</span></div>`).join('')||'<p>Consultez une demande pour voir son suivi.</p>'}</div></section>`}
-else if(view==='planning'){html=head('Le planning du campus','Retrouvez les créneaux réservés et préparez votre prochaine session.',`<button class="primary" data-action="booking">${ico('plus')} Réserver un créneau</button>`)+`<div class="notice" style="margin-bottom:24px">Les créneaux en attente et validés bloquent la disponibilité. Deux réservations ne peuvent pas se chevaucher.</div><section class="panel"><div class="panel-head"><h2>Réservations à venir</h2><span class="badge">${new Date().toLocaleDateString('fr-FR',{month:'long',year:'numeric'})}</span></div>${bookingList(db.requests.filter(r=>r.kind==='booking'&&['approved','pending'].includes(r.status)&&new Date(r.end)>new Date()).sort((a,b)=>a.start.localeCompare(b.start)))}</section>`}
-else if(view==='categories'){html=head('Catégories & validation','Choisissez les catégories soumises à l’accord d’un gestionnaire.',`<button class="primary" data-action="add-category">${ico('plus')} Ajouter une catégorie</button>`)+`<section class="panel">${db.categories.map(c=>`<div class="category-row"><div><b>${esc(c.name)}</b><p>${db.resources.filter(r=>r.cat===c.id&&!r.retired).length} ressources</p></div><label>Nécessite validation <input type="checkbox" data-cat="${c.id}" ${c.approval?'checked':''}></label></div>`).join('')}</section><div class="notice section-space">Si une ressource nécessite une validation, toute la demande est mise en attente. Les règles modifiées s’appliquent aux nouvelles demandes. Les workflows restent fixes selon le type de ressource.</div>`}
-document.querySelector('#main').innerHTML=html+`<div class="footer-note"><span>campus. &nbsp; · &nbsp; MDS Annecy</span><span>Prototype interactif · Données de démonstration locales</span></div>`;bind();}
-function requestTable(list,compact=false){if(!list.length)return '<div class="empty">Aucune demande pour le moment.</div>';return `<div class="table-wrap"><table><thead><tr><th>Ressource / demande</th>${!compact?'<th>Emprunteur</th>':''}<th>Retour / fin prévue</th><th>Statut</th><th></th></tr></thead><tbody>${list.map(r=>`<tr><td><div class="resource-cell"><span class="resource-icon">${ico(resource(r.ids[0])?.icon)}</span><div><b>${esc(resource(r.ids[0])?.name)} ${r.ids.length>1?`+ ${r.ids.length-1}`:''}</b><small>#${r.id} · ${r.kind==='loan'?'Emprunt':'Réservation'}</small></div></div></td>${!compact?`<td>${esc(r.name)}<br><small>${esc(r.group||'À titre individuel')}</small></td>`:''}<td>${fmt(r.end,true)}</td><td>${badge(reqStatus(r))}</td><td><button class="icon-btn" data-detail="${r.id}" aria-label="Voir la demande ${r.id}">${ico('arrow')}</button></td></tr>`).join('')}</tbody></table></div>`}
-function bookingList(list){return `<div class="calendar-list">${list.length?list.map(r=>`<div class="booking-line"><div class="booking-date"><strong>${fmt(r.start)}</strong><small>${new Date(r.start).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})} – ${new Date(r.end).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</small></div><div style="flex:1"><strong>${r.ids.map(id=>esc(resource(id)?.name)).join(', ')}</strong><small>${role==='admin'||r.user===role?esc(r.group||r.name):'Créneau occupé'}</small></div>${badge(r.status)}</div>`).join(''):'<div class="empty">Aucune réservation à venir.</div>'}</div>`}
-function catalogCards(){const list=db.resources.filter(r=>!r.retired&&(filter==='all'||reserve(r.type)===(filter==='booking'))&&(!category||r.cat===category)&&(!statusFilter||resStatus(r)===statusFilter)&&`${r.name} ${r.code}`.toLowerCase().includes(query.toLowerCase()));return `<p class="subtitle" style="margin-bottom:17px;font-size:12px">${list.length} ressource${list.length>1?'s':''}</p><div class="catalog">${list.map(r=>{const k=reserve(r.type)?'booking':'loan',added=cart[k].includes(r.id);return `<article class="resource-card"><div class="card-visual">${ico(r.icon)}${badge(resStatus(r))}</div><div class="card-content"><span class="eyebrow" style="font-size:9px">${esc(cat(r.cat)?.name)}</span><h2>${esc(r.name)}</h2><p>${esc(r.location)}<br>${esc(r.code)}</p><div class="card-foot"><small>${cat(r.cat)?.approval?'Validation requise':'Accès direct'}</small>${view==='manage'?`<button data-edit="${r.id}">Modifier ${ico('settings')}</button>`:`<button data-add="${r.id}" ${r.status!=='available'?'disabled':''} class="${added?'primary':''}">${ico(added?'check':'plus')}${added?'Sélectionné':k==='booking'?'Réserver':'Emprunter'}</button>`}</div></div></article>`}).join('')}</div>${!list.length?'<div class="empty">Aucune ressource ne correspond à votre recherche.</div>':''}`}
-function modal(title,body,actions=''){const d=document.querySelector('#modal');d.innerHTML=`<div class="modal-head"><h2>${title}</h2><button class="icon-btn" data-close aria-label="Fermer">${ico('close')}</button></div>${body}${actions?`<div class="modal-actions">${actions}</div>`:''}`;if(!d.open)d.showModal();d.querySelector('[data-close]').onclick=()=>d.close();d.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>d.close())}
-function openCart(k=cartKind){cartKind=k;const ids=cart[k];modal('Votre demande',`<div class="modal-body"><div class="tabs" style="margin-top:-15px"><button data-kind="loan" class="${k==='loan'?'active':''}">Emprunt (${cart.loan.length})</button><button data-kind="booking" class="${k==='booking'?'active':''}">Réservation (${cart.booking.length})</button></div>${ids.length?ids.map(id=>`<div class="cart-item">${ico(resource(id).icon)}<span>${esc(resource(id).name)}<small>${esc(resource(id).code)}</small></span><button class="icon-btn" data-remove="${id}" aria-label="Retirer ${esc(resource(id).name)}">${ico('close')}</button></div>`).join(''):'<div class="empty">Votre panier est vide.<br>Sélectionnez des ressources dans le catalogue.</div>'}${ids.length?`<form id="request-form"><div class="form-row"><label class="field">Début<input name="start" type="datetime-local" required value="${stamp(1)}" min="${stamp(0,0)}"></label><label class="field">${k==='loan'?'Retour prévu':'Fin du créneau'}<input name="end" type="datetime-local" required value="${stamp(k==='loan'?3:1,18)}"></label></div>${role==='professor'?'<label class="field">Groupe / classe (facultatif)<input name="group" placeholder="Ex. B2 Création digitale" maxlength="80"></label>':''}<label class="field">Motif de la demande<textarea name="purpose" rows="2" required placeholder="Décrivez brièvement votre projet" maxlength="300"></textarea></label><div class="notice">${ids.some(id=>cat(resource(id).cat)?.approval)?'Cette demande sera transmise au gestionnaire pour validation.':'Cette demande sera automatiquement validée si les ressources sont disponibles.'}</div><p id="form-error" role="alert" hidden></p></form>`:''}</div>`,`${ids.length?'<button data-close>Continuer ma sélection</button><button class="primary" form="request-form" type="submit">Confirmer la demande</button>':'<button class="primary" data-close>Continuer</button>'}`);document.querySelectorAll('[data-kind]').forEach(b=>b.onclick=()=>openCart(b.dataset.kind));document.querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>{cart[k]=cart[k].filter(id=>id!==+b.dataset.remove);render();openCart(k)});document.querySelector('#request-form')?.addEventListener('submit',submitRequest)}
-function conflict(ids,start,end,exclude){return db.requests.find(q=>q.id!==exclude&&['approved','pending'].includes(q.status)&&q.ids.some(id=>ids.includes(id))&&((q.kind==='loan'&&q.status==='approved'&&new Date(q.end)<new Date())||(new Date(start)<new Date(q.end)&&new Date(end)>new Date(q.start))))}
-function submitRequest(e){e.preventDefault();const data=Object.fromEntries(new FormData(e.target)),ids=cart[cartKind];let error='';if(!ids.length)error='Sélectionnez au moins une ressource.';else if(new Date(data.start)<new Date())error='La date de début doit être dans le futur.';else if(new Date(data.end)<=new Date(data.start))error='La fin doit être postérieure au début.';else if(ids.some(id=>resource(id).status!=='available'||resource(id).retired))error='Une ressource n’est plus disponible.';else if(conflict(ids,data.start,data.end))error='Ce créneau chevauche une demande existante, ou une ressource est en retard. Choisissez d’autres dates.';if(error){const el=document.querySelector('#form-error');el.hidden=false;el.className='error';el.textContent=error;return}const status=ids.some(id=>cat(resource(id).cat).approval)?'pending':'approved';db.requests.push({id:Math.max(1000,...db.requests.map(r=>r.id))+1,ids:[...ids],user:role,name:users[role].name,kind:cartKind,status,...data,created:new Date().toISOString()});cart[cartKind]=[];persist(`Nouvelle demande de ${users[role].name} · ${labels[status]}`);document.querySelector('#modal').close();navigate('requests');toast(status==='pending'?'Demande envoyée pour validation.':'Votre demande est confirmée.')}
-function detail(id){const r=db.requests.find(r=>r.id===id);if(!r||(role!=='admin'&&r.user!==role))return;const canCancel=['pending','approved'].includes(r.status)&&new Date(r.start)>new Date();modal(`Demande #${r.id}`,`<div class="modal-body">${badge(reqStatus(r))}<p><b>${esc(r.name)}</b>${r.group?` · ${esc(r.group)}`:''}<br>${esc(r.purpose)}</p>${r.ids.map(id=>`<div class="cart-item">${ico(resource(id)?.icon)}<span>${esc(resource(id)?.name)}<small>${esc(resource(id)?.code)}</small></span>${r.conditions?badge(r.conditions[id]==='RAS'?'returned':r.conditions[id]==='Endommagé'?'maintenance':'unavailable'):''}</div>`).join('')}<p>Du <b>${fmt(r.start,true)}</b><br>Au <b>${fmt(r.end,true)}</b></p>${r.reason?`<div class="notice">Motif du refus : ${esc(r.reason)}</div>`:''}${r.status==='returned'?`<div class="notice">Retour contrôlé par ${esc(r.returnBy)} le ${fmt(r.returnAt,true)}.</div>`:''}</div>`,`${canCancel?'<button id="cancel-request">Annuler la demande</button>':''}${role==='admin'&&r.status==='pending'?'<button id="reject">Refuser</button><button class="primary" id="approve">Valider la demande</button>':''}${role==='admin'&&r.kind==='loan'&&['active','late'].includes(reqStatus(r))?'<button class="primary" id="return">Enregistrer le retour</button>':''}`);
-document.querySelector('#cancel-request')?.addEventListener('click',()=>{r.status='cancelled';persist(`Demande #${r.id} annulée par ${users[role].name}`);document.querySelector('#modal').close();render();toast('Demande annulée.')});document.querySelector('#approve')?.addEventListener('click',()=>{if(role!=='admin')return;if(conflict(r.ids,r.start,r.end,r.id)||r.ids.some(id=>resource(id).status!=='available'||resource(id).retired)){toast('Validation impossible : une ressource est indisponible.');return}if(new Date(r.end)<=new Date()){toast('Cette demande est expirée. Refusez-la pour créer un nouveau créneau.');return}r.status='approved';persist(`Demande #${r.id} validée par ${users[role].name}`);document.querySelector('#modal').close();render();toast('Demande validée.')});document.querySelector('#reject')?.addEventListener('click',()=>{modal('Refuser la demande',`<form id="reject-form"><div class="modal-body"><label class="field">Motif du refus<textarea name="reason" required maxlength="300"></textarea></label></div><div class="modal-actions"><button type="submit" class="primary">Confirmer le refus</button></div></form>`);document.querySelector('#reject-form').onsubmit=e=>{e.preventDefault();if(role!=='admin')return;r.status='rejected';r.reason=new FormData(e.target).get('reason');persist(`Demande #${r.id} refusée : ${r.reason}`);document.querySelector('#modal').close();render();toast('Demande refusée.')}});document.querySelector('#return')?.addEventListener('click',()=>returnForm(r))}
-function returnForm(r){modal('Contrôler le retour',`<form id="return-form"><div class="modal-body"><p>Vérifiez chaque ressource avant de confirmer son état.</p>${r.ids.map(id=>`<label class="field">${esc(resource(id).name)}<select name="${id}" required><option value="">Choisir l’état constaté</option><option>RAS</option><option>Endommagé</option><option>Perdu</option></select></label>`).join('')}<div class="notice">Endommagé → en maintenance · Perdu → indisponible.</div></div><div class="modal-actions"><button class="primary">Confirmer le retour</button></div></form>`);document.querySelector('#return-form').onsubmit=e=>{e.preventDefault();if(role!=='admin')return;r.conditions=Object.fromEntries(new FormData(e.target));for(const [id,state]of Object.entries(r.conditions))resource(+id).status=state==='RAS'?'available':state==='Endommagé'?'maintenance':'unavailable';r.status='returned';r.returnAt=new Date().toISOString();r.returnBy=users[role].name;persist(`Retour #${r.id} contrôlé par ${r.returnBy} · ${Object.entries(r.conditions).map(([id,s])=>resource(+id).name+' : '+s).join(', ')}`);document.querySelector('#modal').close();render();toast('Retour enregistré et états mis à jour.')}}
-function editResource(id){if(role!=='admin')return;const r=id?resource(id):{name:'',code:'',type:'physical',cat:db.categories[0].id,location:'',status:'available'};const busy=id&&db.requests.some(q=>q.ids.includes(id)&&['pending','approved'].includes(q.status)&&(q.kind==='loan'||new Date(q.end)>new Date()));modal(id?'Modifier la ressource':'Ajouter une ressource',`<form id="resource-form"><div class="modal-body"><label class="field">Nom<input name="name" value="${esc(r.name)}" required maxlength="100"></label><div class="form-row"><label class="field">Référence unique<input name="code" value="${esc(r.code)}" required maxlength="50"></label><label class="field">Type<select name="type" ${id?'disabled':''}>${Object.entries(types).map(([k,t])=>`<option value="${k}" ${r.type===k?'selected':''}>${t}</option>`).join('')}</select></label></div><label class="field">Catégorie<select name="cat">${db.categories.map(c=>`<option value="${c.id}" ${r.cat===c.id?'selected':''}>${esc(c.name)}</option>`).join('')}</select></label><label class="field">Emplacement / précision<input name="location" value="${esc(r.location)}" required maxlength="120"></label><label class="field">État<select name="status" ${busy?'disabled':''}>${['available','maintenance','unavailable'].map(s=>`<option value="${s}" ${r.status===s?'selected':''}>${labels[s]}</option>`).join('')}</select></label>${busy?'<div class="notice">Cette ressource a une demande ouverte. Son retrait et son état sont verrouillés jusqu’à la clôture.</div>':''}<p id="resource-error" hidden class="error"></p></div><div class="modal-actions">${id?`<button type="button" id="retire" ${busy?'disabled':''}>Retirer du catalogue</button>`:''}<button class="primary">Enregistrer</button></div></form>`);document.querySelector('#resource-form').onsubmit=e=>{e.preventDefault();const values=Object.fromEntries(new FormData(e.target));if(db.resources.some(x=>x.id!==id&&x.code.toLowerCase()===values.code.trim().toLowerCase())){document.querySelector('#resource-error').hidden=false;document.querySelector('#resource-error').textContent='Cette référence est déjà utilisée.';return}if(id)Object.assign(r,values);else db.resources.push({...values,id:Math.max(...db.resources.map(r=>r.id))+1,icon:{physical:'laptop',key:'key',license:'code',room:'room',amphi:'room',vehicle:'car'}[values.type]});persist(`Ressource ${id?'modifiée':'ajoutée'} : ${values.name}`);document.querySelector('#modal').close();render();toast('Ressource enregistrée.')};document.querySelector('#retire')?.addEventListener('click',()=>{if(busy)return;r.retired=true;persist(`Ressource retirée du catalogue : ${r.name}`);document.querySelector('#modal').close();render();toast('Ressource retirée. Son historique est conservé.')})}
-function addCategory(){if(role!=='admin')return;modal('Nouvelle catégorie','<form id="category-form"><div class="modal-body"><label class="field">Nom de la catégorie<input name="name" required maxlength="70"></label><label><input name="approval" type="checkbox"> Nécessite une validation</label><p id="category-error" class="error" hidden></p></div><div class="modal-actions"><button class="primary">Créer la catégorie</button></div></form>');document.querySelector('#category-form').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target),name=f.get('name').trim();if(!name||db.categories.some(c=>c.name.toLowerCase()===name.toLowerCase())){const el=document.querySelector('#category-error');el.hidden=false;el.textContent='Saisissez un nom unique.';return}db.categories.push({id:'cat-'+Date.now(),name,approval:f.has('approval')});persist(`Catégorie créée : ${name}`);document.querySelector('#modal').close();render();toast('Catégorie ajoutée.')}}
-function bind(){document.querySelectorAll('[data-nav]').forEach(b=>b.onclick=()=>navigate(b.dataset.nav));document.querySelector('#role').onchange=e=>{role=e.target.value;cart={loan:[],booking:[]};render();toast(`Vue ${users[role].label.toLowerCase()} activée`)};document.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>{const a=b.dataset.action;if(a==='cart')openCart();else if(a==='loan'||a==='booking'){filter=a;navigate('catalog')}else if(a==='add-resource')editResource();else if(a==='add-category')addCategory();else navigate(a)});document.querySelectorAll('[data-detail]').forEach(b=>b.onclick=()=>detail(+b.dataset.detail));document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{filter=b.dataset.filter;render()});document.querySelector('#search')?.addEventListener('input',e=>{query=e.target.value;document.querySelector('#catalog-results').innerHTML=catalogCards();bindCards()});document.querySelector('#category')?.addEventListener('change',e=>{category=e.target.value;render()});document.querySelector('#status-filter')?.addEventListener('change',e=>{statusFilter=e.target.value;render()});document.querySelectorAll('[data-cat]').forEach(c=>c.onchange=()=>{if(role!=='admin')return;cat(c.dataset.cat).approval=c.checked;persist(`Règle de validation modifiée : ${cat(c.dataset.cat).name}`);toast('Règle de validation enregistrée.')});bindCards()}
-function bindCards(){document.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{const r=resource(+b.dataset.add),k=reserve(r.type)?'booking':'loan';cartKind=k;if(cart[k].includes(r.id))cart[k]=cart[k].filter(id=>id!==r.id);else{cart[k].push(r.id);toast(`${r.name} ajouté au panier ${k==='loan'?'d’emprunt':'de réservation'}.`)}render()});document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>editResource(+b.dataset.edit))}
+"use strict";
+
+/* ---------- Icônes ---------- */
+const icons = {
+  home: "M3 11 12 3l9 8 M5 9.5V21h14V9.5 M10 21v-6h4v6",
+  grid: "M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z",
+  box: "m12 3 9 5v9l-9 5-9-5V8z M3 8l9 5 9-5 M12 13v9",
+  calendar: "M5 5h14a2 2 0 012 2v13H3V7a2 2 0 012-2 M7 3v4 M17 3v4 M3 10h18",
+  clock: "M12 8v5l3 2 M21 12a9 9 0 11-18 0 9 9 0 0118 0",
+  check: "m5 12 4 4L19 6",
+  arrow: "M5 12h14 m-5-5 5 5-5 5",
+  chevL: "m15 6-6 6 6 6",
+  chevR: "m9 6 6 6-6 6",
+  plus: "M12 5v14 M5 12h14",
+  search: "M16 16l5 5 M18 10a8 8 0 11-16 0 8 8 0 0116 0",
+  laptop: "M5 4h14v12H5z M2 20h20l-3-4H5z",
+  camera: "M3 7h5l2-3h4l2 3h5v13H3z M16 13a4 4 0 11-8 0 4 4 0 018 0",
+  key: "M14 9a5 5 0 11-10 0 5 5 0 0110 0 M12 12l9 9 M17 17l3-3",
+  room: "M4 21V3h16v18 M2 21h20 M8 21V7h8v14 M13 13h.1",
+  car: "m3 11 3-7h12l3 7v8H3z M3 11h18 M7 15h1 M16 15h1 M5 19v2 M19 19v2",
+  code: "m8 6-6 6 6 6 M16 6l6 6-6 6 M14 3l-4 18",
+  vr: "M3 7h18v11h-6l-3-3-3 3H3z M7 11h1 M16 11h1",
+  settings: "M4 7h16 M4 17h16 M8 4v6 M16 14v6",
+  close: "m6 6 12 12 M6 18 18 6",
+  bag: "M5 7h14l2 14H3z M8 9V6a4 4 0 018 0v3",
+  history: "M3 11a9 9 0 119 10 M3 4v7h7 M12 7v6l4 2",
+  shield: "m12 2 9 4v6c0 5-9 10-9 10S3 17 3 12V6z m-4 10 3 3 5-6",
+  tag: "M3 3h8l10 10-8 8L3 11z M7.5 7.5h.01",
+  alert: "M12 9v4 M12 17h.01 M10.3 3.9 1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z",
+  pin: "M12 21s-7-6.2-7-11.5a7 7 0 0114 0C19 14.8 12 21 12 21z M14.5 9.5a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0",
+  list: "M8 6h13 M8 12h13 M8 18h13 M3 6h.01 M3 12h.01 M3 18h.01",
+  edit: "M4 20h4L19 9l-4-4L4 16z M14 6l4 4",
+  inbox: "M3 13h5l1 3h6l1-3h5 M5 5h14l2 8v6H3v-6z",
+};
+const ico = (n, cls = "") =>
+  `<svg class="icon ${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="${icons[n] || icons.box}"/></svg>`;
+const esc = (v) =>
+  String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const $ = (s, root = document) => root.querySelector(s);
+const $$ = (s, root = document) => [...root.querySelectorAll(s)];
+const logo = `<svg class="logo-mark" viewBox="0 0 40 40" aria-hidden="true"><path d="M18 8a5 5 0 0 0-6 3 5 5 0 0 0-4 8 5 5 0 0 0 1 7 5 5 0 0 0 9 6z" fill="#3c3c3b"/><path d="M22 8a5 5 0 0 1 6 3 5 5 0 0 1 4 8 5 5 0 0 1-1 7 5 5 0 0 1-9 6z" fill="#2db8c5"/></svg>`;
+
+/* ---------- Dates ---------- */
+const pad = (n) => String(n).padStart(2, "0");
+const localISO = (d) =>
+  `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const dayStart = (d) => {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return x;
+};
+const addDays = (d, n) => {
+  const x = new Date(d);
+  x.setDate(x.getDate() + n);
+  return x;
+};
+const sameDay = (a, b) => dayStart(a).getTime() === dayStart(b).getTime();
+const weekStart = (d) => addDays(dayStart(d), -((new Date(d).getDay() + 6) % 7));
+const atHour = (d, h) => {
+  const x = dayStart(d);
+  x.setHours(Math.floor(h), Math.round((h % 1) * 60));
+  return x;
+};
+const stamp = (days, h = 9) => localISO(atHour(addDays(new Date(), days), h));
+// Décalage (en jours) du n-ième jour ouvré à partir d’aujourd’hui, pour des données de démo réalistes.
+const workday = (n) => {
+  const isWork = (o) => addDays(new Date(), o).getDay() % 6 !== 0;
+  const step = n < 0 ? -1 : 1;
+  let off = 0,
+    left = Math.abs(n);
+  while (!isWork(off)) off += step;
+  while (left > 0) {
+    off += step;
+    if (isWork(off)) left--;
+  }
+  return off;
+};
+const hhmm = (d) => new Date(d).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+const fmt = (d, time = false) =>
+  new Date(d).toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "short",
+    ...(time ? { hour: "2-digit", minute: "2-digit" } : {}),
+  });
+const longDay = (d) => {
+  const s = new Date(d).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+  return s[0].toUpperCase() + s.slice(1);
+};
+const relDay = (d) => {
+  const diff = Math.round((dayStart(d) - dayStart(new Date())) / 864e5);
+  if (diff === 0) return "aujourd’hui";
+  if (diff === 1) return "demain";
+  if (diff === -1) return "hier";
+  if (diff > 1 && diff < 7) return new Date(d).toLocaleDateString("fr-FR", { weekday: "long" });
+  return `le ${fmt(d)}`;
+};
+
+/* ---------- Données ---------- */
+const STORE = "mds-campus-v2";
+const types = {
+  physical: "Matériel",
+  key: "Clés",
+  license: "Licences",
+  room: "Salles",
+  amphi: "Amphithéâtre",
+  vehicle: "Véhicules",
+};
+const reserve = (t) => ["room", "amphi", "vehicle"].includes(t);
+
+const seed = () => {
+  const booking = (id, res, user, name, day, h1, h2, extra = {}) => {
+    const d = workday(day);
+    return {
+      id,
+      ids: [res],
+      user,
+      name,
+      kind: "booking",
+      start: stamp(d, h1),
+      end: stamp(d, h2),
+      status: "approved",
+      purpose: "",
+      created: stamp(Math.min(d, 0) - 2),
+      ...extra,
+    };
+  };
+  return {
+    categories: [
+      { id: "it", name: "Informatique", approval: false },
+      { id: "av", name: "Audiovisuel", approval: true },
+      { id: "vr", name: "Réalité virtuelle", approval: true },
+      { id: "access", name: "Clés & accès", approval: false },
+      { id: "soft", name: "Logiciels", approval: false },
+      { id: "spaces", name: "Espaces de travail", approval: false },
+      { id: "transport", name: "Véhicules", approval: true },
+    ],
+    resources: [
+      { id: 1, name: "MacBook Pro 14″", code: "MDS-PC-001", type: "physical", cat: "it", icon: "laptop", status: "available", location: "Accueil · Bâtiment A" },
+      { id: 2, name: "Canon EOS R50", code: "MDS-CAM-002", type: "physical", cat: "av", icon: "camera", status: "available", location: "Studio · Bâtiment B" },
+      { id: 3, name: "Meta Quest 3", code: "MDS-VR-003", type: "physical", cat: "vr", icon: "vr", status: "available", location: "Lab immersif" },
+      { id: 4, name: "Salle 204 — Créativité", code: "MDS-SAL-204", type: "room", cat: "spaces", icon: "room", status: "available", location: "Bâtiment A · 24 places" },
+      { id: 5, name: "Adobe Creative Cloud", code: "MDS-LIC-005", type: "license", cat: "soft", icon: "code", status: "available", location: "Licence nominative · 1 poste" },
+      { id: 6, name: "Clé du studio photo", code: "MDS-CLE-006", type: "key", cat: "access", icon: "key", status: "available", location: "Accueil · Bâtiment B" },
+      { id: 7, name: "Amphithéâtre des Alpes", code: "MDS-AMP-001", type: "amphi", cat: "spaces", icon: "room", status: "available", location: "Rez-de-chaussée · 120 places" },
+      { id: 8, name: "Renault Kangoo", code: "MDS-VEH-001", type: "vehicle", cat: "transport", icon: "car", status: "available", location: "Parking du campus · 5 places" },
+      { id: 9, name: "Dell Latitude 5440", code: "MDS-PC-009", type: "physical", cat: "it", icon: "laptop", status: "maintenance", location: "Service informatique" },
+      { id: 10, name: "Kit câbles & adaptateurs", code: "MDS-ACC-010", type: "physical", cat: "it", icon: "box", status: "available", location: "Accueil · Bâtiment A" },
+      { id: 11, name: "Salle 101 — Projet", code: "MDS-SAL-101", type: "room", cat: "spaces", icon: "room", status: "available", location: "Bâtiment A · 12 places" },
+      { id: 12, name: "Studio photo", code: "MDS-STU-001", type: "room", cat: "av", icon: "camera", status: "available", location: "Bâtiment B · fond cyclo" },
+      { id: 13, name: "Salle 108 — Mac", code: "MDS-SAL-108", type: "room", cat: "spaces", icon: "laptop", status: "available", location: "Bâtiment A · 20 postes" },
+    ],
+    requests: [
+      { id: 1001, ids: [1], user: "student", name: "Alex Martin", kind: "loan", start: stamp(-3), end: stamp(2, 18), status: "approved", purpose: "Projet de fin de semestre", created: stamp(-3) },
+      { id: 1002, ids: [2], user: "professor", name: "Camille Laurent", kind: "loan", start: stamp(1), end: stamp(3, 18), status: "pending", group: "B2 Création digitale", purpose: "Atelier photo", created: stamp(-1) },
+      { id: 1004, ids: [3], user: "professor", name: "Camille Laurent", kind: "loan", start: stamp(-5), end: stamp(-1, 18), status: "approved", purpose: "Atelier immersif", created: stamp(-5) },
+      booking(1003, 4, "student", "Alex Martin", 1, 14, 16, { purpose: "Travail en groupe" }),
+      booking(1005, 7, "professor", "Camille Laurent", 0, 9, 12, { purpose: "Conférence UX", group: "B3 Développement web" }),
+      booking(1006, 11, "other", "BDE MyDigitalSchool", 0, 12, 14, { purpose: "Réunion du bureau" }),
+      booking(1007, 4, "other", "Thomas Girard", 0, 10, 12, { purpose: "Révisions" }),
+      booking(1008, 13, "professor", "Camille Laurent", 0, 14, 17.5, { purpose: "Cours After Effects", group: "B2 Création digitale" }),
+      booking(1009, 12, "other", "Léa Fontaine", 1, 9.5, 12, { purpose: "Shooting portfolio", status: "pending" }),
+      booking(1010, 7, "professor", "Camille Laurent", 2, 14, 16.5, { purpose: "Jury de projets", group: "M1 Expert digital" }),
+      booking(1011, 12, "student", "Alex Martin", 3, 10, 12, { purpose: "Photos produit", status: "pending" }),
+      booking(1012, 8, "other", "Service communication", 2, 8, 18, { purpose: "Salon de l’étudiant" }),
+      booking(1013, 13, "other", "Hugo Bernard", 1, 9, 11, { purpose: "Montage vidéo" }),
+      booking(1014, 4, "professor", "Camille Laurent", 4, 9, 12, { purpose: "Atelier branding", group: "B1 Web" }),
+      booking(1015, 11, "other", "Inès Moreau", 4, 14, 16, { purpose: "Point d’équipe" }),
+      booking(1016, 7, "other", "BDE MyDigitalSchool", 5, 18, 20, { purpose: "Soirée d’intégration" }),
+      booking(1017, 11, "student", "Alex Martin", -1, 16, 18, { purpose: "Préparation de l’oral" }),
+      booking(1018, 4, "other", "Thomas Girard", -2, 9, 11, { purpose: "Révisions" }),
+      booking(1019, 13, "professor", "Camille Laurent", 2, 9, 12, { purpose: "Cours Figma", group: "B1 Web" }),
+      booking(1020, 12, "other", "Nina Rossi", 2, 14, 17, { purpose: "Tournage clip" }),
+      booking(1021, 4, "other", "Inès Moreau", 6, 10, 12, { purpose: "Atelier UX" }),
+      booking(1022, 11, "student", "Alex Martin", 0, 15, 17, { purpose: "Réunion projet" }),
+    ],
+    events: [
+      { text: "Réservation de la salle 204 confirmée", at: stamp(-1) },
+      { text: "Nouvelle demande de Camille Laurent", at: stamp(-1) },
+      { text: "MacBook Pro 14″ remis à Alex Martin", at: stamp(-3) },
+    ],
+  };
+};
+
+let db;
+try {
+  db = JSON.parse(localStorage.getItem(STORE)) || seed();
+} catch {
+  db = seed();
+}
+
+const users = {
+  student: { name: "Alex Martin", label: "Étudiant", initials: "AM" },
+  professor: { name: "Camille Laurent", label: "Professeur", initials: "CL" },
+  admin: { name: "Sophie Dubois", label: "Gestionnaire", initials: "SD" },
+};
+const labels = {
+  available: "Disponible",
+  borrowed: "Emprunté",
+  reserved: "Réservé",
+  maintenance: "En maintenance",
+  unavailable: "Indisponible",
+  pending: "En attente",
+  approved: "Validée",
+  late: "En retard",
+  active: "En cours",
+  returned: "Rendue",
+  finished: "Terminée",
+  cancelled: "Annulée",
+  rejected: "Refusée",
+};
+
+/* ---------- État de l’interface ---------- */
+const mobile = matchMedia("(max-width: 760px)");
+const motionOK = !matchMedia("(prefers-reduced-motion: reduce)").matches;
+let role = "student",
+  view = "dashboard",
+  filter = "all",
+  query = "",
+  category = "",
+  statusFilter = "",
+  reqFilter = "all",
+  cart = [],
+  planView = mobile.matches ? "day" : "week",
+  planDate = dayStart(new Date()),
+  planHidden = [],
+  lastView = null,
+  prevIndicator = null;
+
+/* ---------- Sélecteurs métier ---------- */
+const resource = (id) => db.resources.find((r) => r.id === id);
+const cat = (id) => db.categories.find((c) => c.id === id);
+const reservables = () => db.resources.filter((r) => reserve(r.type) && !r.retired);
+const palette = ["#662483", "#e71d73", "#258695", "#a83fde", "#c90d58", "#2db8c5", "#7a2a9f", "#fd69b4"];
+const colorOf = (id) => {
+  const i = db.resources.filter((r) => reserve(r.type)).findIndex((r) => r.id === id);
+  return palette[Math.max(0, i) % palette.length];
+};
+const reqStatus = (r) => {
+  if (r.status !== "approved") return r.status;
+  const now = new Date();
+  if (r.kind === "loan" && new Date(r.end) < now) return "late";
+  if (new Date(r.start) > now) return "approved";
+  return r.kind === "booking" && new Date(r.end) < now ? "finished" : "active";
+};
+const resStatus = (r) => {
+  if (r.status !== "available") return r.status;
+  const now = new Date();
+  const open = db.requests.filter((q) => q.ids.includes(r.id));
+  if (open.some((q) => q.status === "approved" && new Date(q.start) <= now && (q.kind === "loan" || new Date(q.end) > now)))
+    return "borrowed";
+  if (open.some((q) => ["pending", "approved"].includes(q.status) && new Date(q.end) > now && new Date(q.start) <= addDays(now, 1)))
+    return "reserved";
+  return "available";
+};
+const badge = (s) => `<span class="badge s-${s}">${labels[s] || s}</span>`;
+const mine = () => db.requests.filter((r) => role === "admin" || r.user === role);
+const visible = (r) => role === "admin" || r.user === role;
+const firstName = () => users[role].name.split(" ")[0];
+
+function persist(text) {
+  if (text) db.events.unshift({ text, at: new Date().toISOString() });
+  try {
+    localStorage.setItem(STORE, JSON.stringify(db));
+  } catch {
+    toast("Stockage local indisponible : vos changements ne seront pas conservés.", "warn");
+  }
+}
+
+/* ---------- Animations ---------- */
+const ease = "cubic-bezier(.2,.8,.2,1)";
+function reveal(elements, { y = 14, step = 40, duration = 460, max = 14 } = {}) {
+  if (!motionOK) return;
+  elements.slice(0, max).forEach((el, i) =>
+    el.animate([{ opacity: 0, transform: `translateY(${y}px)` }, { opacity: 1, transform: "none" }], {
+      duration,
+      delay: i * step,
+      easing: ease,
+      fill: "backwards",
+    }),
+  );
+}
+function slide(el, dir) {
+  if (!motionOK || !el) return;
+  el.animate([{ opacity: 0, transform: `translateX(${dir * 24}px)` }, { opacity: 1, transform: "none" }], {
+    duration: 380,
+    easing: ease,
+  });
+}
+function pop(el) {
+  if (!motionOK || !el) return;
+  el.animate([{ transform: "scale(1)" }, { transform: "scale(1.35)" }, { transform: "scale(1)" }], {
+    duration: 420,
+    easing: "cubic-bezier(.3,1.6,.5,1)",
+  });
+}
+
+function toast(text, tone = "ok") {
+  const el = $("#toast");
+  el.innerHTML = `${ico(tone === "warn" ? "alert" : "check")}<span>${esc(text)}</span>`;
+  el.className = `show ${tone}`;
+  clearTimeout(window.toastTimer);
+  window.toastTimer = setTimeout(() => (el.className = tone), 3600);
+}
+
+/* ---------- Fenêtre modale ---------- */
+let closeTimer;
+function modal(title, body, actions = "", size = "") {
+  const d = $("#modal");
+  clearTimeout(closeTimer);
+  d.classList.remove("closing");
+  d.className = size;
+  d.innerHTML = `<div class="modal-inner"><div class="modal-head"><h2>${title}</h2><button class="icon-btn ghost" data-close aria-label="Fermer">${ico("close")}</button></div>${body}${actions ? `<div class="modal-actions">${actions}</div>` : ""}</div>`;
+  if (!d.open) d.showModal();
+  else reveal([$(".modal-inner", d)], { y: 6, duration: 260 });
+  $$("[data-close]", d).forEach((b) => (b.onclick = closeModal));
+}
+function closeModal() {
+  const d = $("#modal");
+  if (!d.open) return;
+  if (!motionOK) return d.close();
+  d.classList.add("closing");
+  closeTimer = setTimeout(() => {
+    d.classList.remove("closing");
+    d.close();
+  }, 180);
+}
+$("#modal").addEventListener("cancel", (e) => {
+  e.preventDefault();
+  closeModal();
+});
+$("#modal").addEventListener("click", (e) => {
+  if (e.target.id === "modal") closeModal();
+});
+
+/* ---------- Navigation ---------- */
+const pages = {
+  dashboard: ["Accueil", "home"],
+  catalog: ["Catalogue", "box"],
+  planning: ["Réservations", "calendar"],
+  requests: ["Mes demandes", "inbox"],
+  history: ["Historique", "history"],
+  approvals: ["À valider", "shield"],
+  manage: ["Ressources", "settings"],
+  categories: ["Catégories", "tag"],
+};
+const adminOnly = ["approvals", "manage", "categories"];
+const pageTitle = (v) => (v === "requests" && role === "admin" ? "Demandes" : pages[v][0]);
+function navigate(v) {
+  view = v;
+  query = "";
+  render();
+  window.scrollTo({ top: 0, behavior: motionOK ? "smooth" : "auto" });
+}
+const navBtn = (v, count = 0) =>
+  `<button data-nav="${v}" class="${view === v ? "active" : ""}" ${view === v ? 'aria-current="page"' : ""}>${ico(pages[v][1])}<span>${pageTitle(v)}</span>${count ? `<span class="count">${count}</span>` : ""}</button>`;
+
+function renderChrome() {
+  const u = users[role];
+  const pending = db.requests.filter((r) => r.status === "pending").length;
+  $("#sidebar").innerHTML = `
+    <button class="brand" data-nav="dashboard" aria-label="Accueil">${logo}<span><b>Campus</b><small>MyDigitalSchool Annecy</small></span></button>
+    <nav>
+      <span class="nav-indicator" aria-hidden="true"></span>
+      ${navBtn("dashboard")}${navBtn("catalog")}${navBtn("planning")}${navBtn("requests")}${navBtn("history")}
+      ${role === "admin" ? `<div class="nav-label">Gestion</div>${navBtn("approvals", pending)}${navBtn("manage")}${navBtn("categories")}` : ""}
+    </nav>
+    <div class="side-bottom">
+      <div class="profile"><span class="avatar">${u.initials}</span><span><b>${u.name}</b><small>${u.label}</small></span></div>
+    </div>`;
+  $("#tabbar").innerHTML = ["dashboard", "catalog", "planning", role === "admin" ? "approvals" : "requests"]
+    .map(
+      (v) =>
+        `<button data-nav="${v}" class="${view === v ? "active" : ""}">${ico(pages[v][1])}<span>${v === "requests" ? "Demandes" : pages[v][0]}</span>${v === "approvals" && pending ? `<i>${pending}</i>` : ""}</button>`,
+    )
+    .join("");
+  $("#topbar").innerHTML = `
+    <button class="brand mobile-only" data-nav="dashboard" aria-label="Accueil">${logo}<b>Campus</b></button>
+    <span class="today desktop-only">${longDay(new Date())}</span>
+    <div class="top-actions">
+      <label class="demo"><span>Mode démo</span><select id="role" aria-label="Changer de profil de démonstration">${Object.entries(users)
+        .map(([k, x]) => `<option value="${k}" ${role === k ? "selected" : ""}>${x.label}</option>`)
+        .join("")}</select></label>
+      <button class="icon-btn cart-btn" data-action="cart" aria-label="Ma sélection de matériel (${cart.length})">${ico("bag")}${cart.length ? `<i>${cart.length}</i>` : ""}</button>
+    </div>`;
+  placeIndicator();
+  bindChrome();
+}
+function bindChrome() {
+  $$("#sidebar [data-nav], #topbar [data-nav], #tabbar [data-nav]").forEach((b) => (b.onclick = () => navigate(b.dataset.nav)));
+  $("#topbar [data-action=cart]").onclick = openCart;
+  $("#role").onchange = (e) => {
+    role = e.target.value;
+    cart = [];
+    prevIndicator = null;
+    lastView = null;
+    render();
+    toast(`Vous voyez maintenant l’app comme ${users[role].label.toLowerCase()}.`);
+  };
+}
+function placeIndicator() {
+  const ind = $(".nav-indicator"),
+    active = $("#sidebar nav button.active");
+  if (!ind) return;
+  if (!active) {
+    ind.style.opacity = 0;
+    prevIndicator = null;
+    return;
+  }
+  const top = active.offsetTop;
+  ind.style.cssText = `opacity:1;height:${active.offsetHeight}px;transform:translateY(${top}px)`;
+  if (motionOK && prevIndicator !== null && prevIndicator !== top)
+    ind.animate([{ transform: `translateY(${prevIndicator}px)` }, { transform: `translateY(${top}px)` }], {
+      duration: 420,
+      easing: "cubic-bezier(.3,1.3,.5,1)",
+    });
+  prevIndicator = top;
+}
+
+/* ---------- Rendu principal ---------- */
+const head = (title, sub, action = "") =>
+  `<div class="page-head"><div><h1>${title}</h1>${sub ? `<p>${sub}</p>` : ""}</div>${action ? `<div class="page-actions">${action}</div>` : ""}</div>`;
+const empty = (text, cta = "") => `<div class="empty">${ico("inbox")}<p>${text}</p>${cta}</div>`;
+
+function render() {
+  if (role !== "admin" && adminOnly.includes(view)) view = "dashboard";
+  renderChrome();
+  const main = $("#main");
+  main.innerHTML = (views[view] || views.dashboard)();
+  bind();
+  if (lastView !== view) {
+    reveal($$(":scope > *", main));
+    reveal($$(".resource-card, .ev, .bar", main), { y: 8, step: 22, duration: 380, max: 30 });
+  }
+  lastView = view;
+  scrollToNow();
+}
+// Sur petit écran, la frise du jour s’ouvre sur l’heure courante plutôt que sur 8 h.
+function scrollToNow() {
+  $$(".scroll-x").forEach((box) => {
+    const tl = $(".timeline", box);
+    if (!tl || box.scrollWidth <= box.clientWidth) return;
+    const h = Math.min(H1 - 3, Math.max(H0, hourOf(new Date()) - 1));
+    const track = $(".tl-track", tl);
+    box.scrollLeft = ((h - H0) / (H1 - H0)) * track.offsetWidth;
+  });
+}
+
+const views = {
+  dashboard() {
+    const now = new Date();
+    const list = mine();
+    const late = list.filter((r) => reqStatus(r) === "late");
+    const current = list
+      .filter((r) => ["active", "late"].includes(reqStatus(r)) || (["approved", "pending"].includes(r.status) && new Date(r.start) > now))
+      .sort((a, b) => a.start.localeCompare(b.start))
+      .slice(0, 5);
+    const pending = db.requests.filter((r) => r.status === "pending");
+    const available = db.resources.filter((r) => !r.retired && resStatus(r) === "available").length;
+    const todayCount = db.requests.filter(
+      (r) => r.kind === "booking" && ["approved", "pending"].includes(r.status) && sameDay(r.start, now),
+    ).length;
+
+    let alerts = "";
+    if (role === "admin") {
+      if (pending.length)
+        alerts += `<button class="alert" data-nav="approvals">${ico("shield")}<span><b>${pending.length} demande${pending.length > 1 ? "s" : ""} à valider</b><small>La plus ancienne date du ${fmt(pending.map((r) => r.created).sort()[0])}.</small></span>${ico("arrow")}</button>`;
+      const lateAll = db.requests.filter((r) => reqStatus(r) === "late");
+      if (lateAll.length)
+        alerts += `<button class="alert pink" data-detail="${lateAll[0].id}">${ico("alert")}<span><b>${lateAll.length} retour${lateAll.length > 1 ? "s" : ""} en retard</b><small>${esc(resource(lateAll[0].ids[0])?.name)} · ${esc(lateAll[0].name)}, attendu le ${fmt(lateAll[0].end)}.</small></span>${ico("arrow")}</button>`;
+    } else
+      late.forEach(
+        (r) =>
+          (alerts += `<button class="alert pink" data-detail="${r.id}">${ico("alert")}<span><b>${esc(resource(r.ids[0])?.name)} à rendre</b><small>Le retour était prévu ${relDay(r.end)}. Merci de le rapporter à l’accueil.</small></span>${ico("arrow")}</button>`),
+      );
+
+    const actions =
+      role === "admin"
+        ? `<button class="btn" data-nav="planning">${ico("calendar")} Planning</button><button class="btn primary" data-nav="approvals">Traiter les demandes</button>`
+        : `<button class="btn" data-action="book">${ico("calendar")} Réserver une salle</button><button class="btn primary" data-action="loan">${ico("plus")} Emprunter du matériel</button>`;
+
+    const loans = list.filter((r) => r.kind === "loan" && ["active", "late"].includes(reqStatus(r))).length;
+    const next = list.filter((r) => r.kind === "booking" && ["approved", "pending"].includes(r.status) && new Date(r.end) > now).length;
+    const summary =
+      role === "admin"
+        ? `${pending.length} demande${pending.length > 1 ? "s" : ""} en attente et ${todayCount} réservation${todayCount > 1 ? "s" : ""} aujourd’hui.`
+        : loans || next
+          ? `Vous avez ${loans ? `${loans} emprunt${loans > 1 ? "s" : ""} en cours` : ""}${loans && next ? " et " : ""}${next ? `${next} réservation${next > 1 ? "s" : ""} à venir` : ""}.`
+          : "Rien de prévu pour l’instant.";
+    return (
+      head(`Bonjour ${firstName()}`, summary, actions) +
+      (alerts ? `<div class="alerts">${alerts}</div>` : "") +
+      `<div class="dash">
+        <div class="dash-main">
+          <section class="panel">
+            <div class="panel-head"><h2>${role === "admin" ? "Demandes récentes" : "Vos emprunts et réservations"}</h2><button class="link" data-nav="requests">Tout voir</button></div>
+            ${
+              role === "admin"
+                ? requestList(db.requests.slice().sort((a, b) => b.created.localeCompare(a.created)).slice(0, 5), true)
+                : current.length
+                  ? `<div class="upcoming">${current.map(upcomingRow).join("")}</div>`
+                  : empty("Rien de prévu pour l’instant.", `<button class="btn small" data-nav="catalog">Parcourir le catalogue</button>`)
+            }
+          </section>
+          <section class="panel">
+            <div class="panel-head"><div><h2>Aujourd’hui sur le campus</h2><p>${todayCount} réservation${todayCount > 1 ? "s" : ""} · cliquez sur un créneau libre pour réserver</p></div><button class="link" data-nav="planning">Ouvrir le planning</button></div>
+            <div class="scroll-x">${dayTimeline(dayStart(now), true)}</div>
+          </section>
+        </div>
+        <div class="dash-side">
+          <section class="panel figures">
+            <div><strong>${available}</strong><span>ressources disponibles</span></div>
+            <div><strong>${todayCount}</strong><span>réservations aujourd’hui</span></div>
+            <div><strong>${role === "admin" ? pending.length : list.filter((r) => r.status === "pending").length}</strong><span>demande${pending.length > 1 ? "s" : ""} en attente</span></div>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><h2>Activité</h2></div>
+            <ul class="feed">${(role === "admin"
+              ? db.events
+              : list
+                  .slice()
+                  .sort((a, b) => b.created.localeCompare(a.created))
+                  .map((r) => ({ text: `${resource(r.ids[0])?.name} · ${labels[reqStatus(r)].toLowerCase()}`, at: r.created }))
+            )
+              .slice(0, 5)
+              .map((e) => `<li><span></span><p>${esc(e.text)}<small>${fmt(e.at, true)}</small></p></li>`)
+              .join("") || "<li class='muted'>Aucune activité.</li>"}</ul>
+          </section>
+          <section class="panel help">
+            <h2>Comment ça marche ?</h2>
+            <ol><li><span><b>Choisissez</b> du matériel ou un créneau.</span></li><li><span><b>Validation</b> immédiate, ou par l’accueil pour certains équipements.</span></li><li><span><b>Récupérez</b> et rendez le matériel à l’accueil du bâtiment A.</span></li></ol>
+          </section>
+        </div>
+      </div>`
+    );
+  },
+
+  catalog() {
+    const manage = view === "manage";
+    return (
+      head(
+        manage ? "Ressources" : "Catalogue",
+        manage ? "Ajoutez, modifiez ou retirez les ressources proposées." : "Le matériel s’emprunte, les salles et véhicules se réservent.",
+        manage
+          ? `<button class="btn primary" data-action="add-resource">${ico("plus")} Ajouter une ressource</button>`
+          : `<button class="btn ${cart.length ? "primary" : ""}" data-action="cart">${ico("bag")} Ma sélection${cart.length ? ` · ${cart.length}` : ""}</button>`,
+      ) +
+      `<div class="toolbar">
+        ${segmented("filter", filter, [["all", "Tout"], ["loan", "À emprunter"], ["booking", "À réserver"]])}
+        <label class="search">${ico("search")}<input id="search" type="search" placeholder="Rechercher par nom ou référence" value="${esc(query)}"></label>
+        <select id="category" aria-label="Catégorie"><option value="">Toutes les catégories</option>${db.categories.map((c) => `<option value="${c.id}" ${category === c.id ? "selected" : ""}>${esc(c.name)}</option>`).join("")}</select>
+        <select id="status-filter" aria-label="Disponibilité"><option value="">Tous les états</option>${["available", "borrowed", "reserved", "maintenance", "unavailable"].map((s) => `<option value="${s}" ${s === statusFilter ? "selected" : ""}>${labels[s]}</option>`).join("")}</select>
+      </div>
+      <div id="catalog-results">${catalogCards()}</div>`
+    );
+  },
+
+  requests() {
+    const all = mine()
+      .slice()
+      .sort((a, b) => b.created.localeCompare(a.created));
+    const groups = {
+      all: () => true,
+      open: (r) => ["pending", "approved", "active", "late"].includes(reqStatus(r)),
+      closed: (r) => ["returned", "finished", "cancelled", "rejected"].includes(reqStatus(r)),
+    };
+    const list = all.filter(groups[reqFilter]);
+    return (
+      head(
+        role === "admin" ? "Demandes" : "Mes demandes",
+        role === "admin" ? "Tous les emprunts et réservations du campus." : "Suivez vos emprunts et réservations.",
+        role === "admin" ? "" : `<button class="btn primary" data-nav="catalog">${ico("plus")} Nouvelle demande</button>`,
+      ) +
+      `<div class="toolbar">${segmented("req", reqFilter, [["all", `Toutes · ${all.length}`], ["open", `En cours · ${all.filter(groups.open).length}`], ["closed", `Terminées · ${all.filter(groups.closed).length}`]])}</div>
+      <section class="panel flush">${requestList(list, role === "admin")}</section>`
+    );
+  },
+
+  approvals() {
+    const list = db.requests.filter((r) => r.status === "pending").sort((a, b) => a.start.localeCompare(b.start));
+    return (
+      head("À valider", "Les demandes qui concernent du matériel ou des espaces soumis à validation.") +
+      (list.length
+        ? `<div class="approvals">${list
+            .map(
+              (r) => `<article class="approval">
+              <div class="approval-who"><span class="avatar">${esc(r.name.split(" ").map((w) => w[0]).join("").slice(0, 2))}</span><div><b>${esc(r.name)}</b><small>${esc(r.group || (users[r.user]?.label ?? "Externe"))} · demandé le ${fmt(r.created)}</small></div></div>
+              <div class="approval-what">${r.ids.map((id) => `<span class="pill-res">${ico(resource(id)?.icon)}${esc(resource(id)?.name)}</span>`).join("")}</div>
+              <p class="approval-when">${ico("calendar")} ${dateRange(r)}</p>
+              ${r.purpose ? `<p class="approval-why">« ${esc(r.purpose)} »</p>` : ""}
+              <div class="approval-actions"><button class="btn" data-reject="${r.id}">Refuser</button><button class="btn primary" data-approve="${r.id}">${ico("check")} Valider</button></div>
+            </article>`,
+            )
+            .join("")}</div>`
+        : `<section class="panel">${empty("Tout est à jour. Aucune demande en attente.")}</section>`)
+    );
+  },
+
+  history() {
+    const closed = mine()
+      .filter((r) => ["returned", "finished", "cancelled", "rejected"].includes(reqStatus(r)))
+      .sort((a, b) => b.end.localeCompare(a.end));
+    let journal = "";
+    if (role === "admin") {
+      const byDay = {};
+      db.events.slice(0, 40).forEach((e) => (byDay[dayStart(e.at).toISOString()] ??= []).push(e));
+      journal = `<section class="panel"><div class="panel-head"><h2>Journal</h2></div>${Object.entries(byDay)
+        .map(
+          ([d, list]) =>
+            `<div class="journal-day"><h3>${longDay(d)}</h3><ul class="feed">${list.map((e) => `<li><span></span><p>${esc(e.text)}<small>${hhmm(e.at)}</small></p></li>`).join("")}</ul></div>`,
+        )
+        .join("")}</section>`;
+    }
+    return (
+      head("Historique", role === "admin" ? "Ce qui s’est passé sur le campus." : "Vos demandes terminées, rendues ou annulées.") +
+      `<section class="panel flush">${requestList(closed, role === "admin", "Aucune demande terminée pour le moment.")}</section>` +
+      journal
+    );
+  },
+
+  manage() {
+    return views.catalog();
+  },
+
+  categories() {
+    return (
+      head(
+        "Catégories",
+        "Choisissez les catégories dont les demandes doivent être validées par l’accueil.",
+        `<button class="btn primary" data-action="add-category">${ico("plus")} Ajouter une catégorie</button>`,
+      ) +
+      `<section class="panel flush">${db.categories
+        .map(
+          (c) => `<div class="category-row"><div><b>${esc(c.name)}</b><small>${db.resources.filter((r) => r.cat === c.id && !r.retired).length} ressource(s)</small></div>
+          <label class="switch"><input type="checkbox" data-cat="${c.id}" ${c.approval ? "checked" : ""}><span class="track"><span></span></span><span class="switch-label">Validation requise</span></label></div>`,
+        )
+        .join("")}</section>
+      <p class="hint">La règle s’applique aux nouvelles demandes. Une demande contenant au moins une ressource soumise à validation est mise en attente.</p>`
+    );
+  },
+
+  planning() {
+    return (
+      head(
+        "Réservations",
+        "Le planning des salles, de l’amphithéâtre et des véhicules.",
+        `<button class="btn primary" data-action="book">${ico("plus")} Réserver</button>`,
+      ) +
+      `<div class="plan-bar">
+        <div class="plan-nav">
+          <button class="icon-btn" data-plan-step="-1" aria-label="Période précédente">${ico("chevL")}</button>
+          <button class="btn small" data-plan-today>Aujourd’hui</button>
+          <button class="icon-btn" data-plan-step="1" aria-label="Période suivante">${ico("chevR")}</button>
+          <h2 id="plan-label">${planLabel()}</h2>
+        </div>
+        ${segmented("plan", planView, [["day", "Jour"], ["week", "Semaine"], ["list", "Liste"]])}
+      </div>
+      <div class="chips" id="plan-chips">${planChips()}</div>
+      <section class="panel flush plan-panel"><div id="plan-body">${planBody()}</div></section>
+      <div class="legend"><span><i class="lg-ok"></i>Validée</span><span><i class="lg-pending"></i>En attente de validation</span><span><i class="lg-mine"></i>Vos réservations</span></div>`
+    );
+  },
+};
+
+/* ---------- Composants ---------- */
+function segmented(name, value, options) {
+  const i = Math.max(0, options.findIndex(([v]) => v === value));
+  return `<div class="segmented" role="tablist" data-seg="${name}" style="--n:${options.length};--i:${i}"><span class="thumb" aria-hidden="true"></span>${options
+    .map(([v, t]) => `<button role="tab" aria-selected="${v === value}" data-${name}="${v}" class="${v === value ? "active" : ""}">${t}</button>`)
+    .join("")}</div>`;
+}
+
+function dateRange(r) {
+  const s = new Date(r.start),
+    e = new Date(r.end);
+  if (sameDay(s, e)) return `${longDay(s)} · ${hhmm(s)} – ${hhmm(e)}`;
+  return `${fmt(s, true)} → ${fmt(e, true)}`;
+}
+
+function upcomingRow(r) {
+  const s = reqStatus(r),
+    res = resource(r.ids[0]);
+  const when =
+    r.kind === "loan"
+      ? ["active", "late"].includes(s)
+        ? `À rendre ${relDay(r.end)} à ${hhmm(r.end)}`
+        : `Retrait ${relDay(r.start)} à ${hhmm(r.start)}`
+      : `${relDay(r.start)[0].toUpperCase() + relDay(r.start).slice(1)} · ${hhmm(r.start)} – ${hhmm(r.end)}`;
+  return `<button class="up-row" data-detail="${r.id}" style="--c:${r.kind === "booking" ? colorOf(res?.id) : "var(--purple)"}">
+    <span class="res-icon">${ico(res?.icon)}</span>
+    <span class="up-main"><b>${esc(res?.name)}${r.ids.length > 1 ? ` + ${r.ids.length - 1}` : ""}</b><small>${when}</small></span>
+    ${badge(s)}${ico("chevR", "chev")}
+  </button>`;
+}
+
+function requestList(list, showUser = false, emptyText = "Aucune demande pour le moment.") {
+  if (!list.length) return empty(emptyText);
+  return `<div class="req-list">${list
+    .map((r) => {
+      const res = resource(r.ids[0]);
+      return `<button class="req-row" data-detail="${r.id}">
+        <span class="res-icon">${ico(res?.icon)}</span>
+        <span class="req-main"><b>${esc(res?.name)}${r.ids.length > 1 ? ` + ${r.ids.length - 1}` : ""}</b><small>${r.kind === "loan" ? "Emprunt" : "Réservation"} · n° ${r.id}</small></span>
+        ${showUser ? `<span class="req-user">${esc(r.name)}<small>${esc(r.group || users[r.user]?.label || "")}</small></span>` : ""}
+        <span class="req-date">${dateRange(r)}</span>
+        ${badge(reqStatus(r))}
+        ${ico("chevR", "chev")}
+      </button>`;
+    })
+    .join("")}</div>`;
+}
+
+function catalogCards() {
+  const manage = view === "manage";
+  const list = db.resources.filter(
+    (r) =>
+      !r.retired &&
+      (filter === "all" || reserve(r.type) === (filter === "booking")) &&
+      (!category || r.cat === category) &&
+      (!statusFilter || resStatus(r) === statusFilter) &&
+      `${r.name} ${r.code} ${r.location}`.toLowerCase().includes(query.trim().toLowerCase()),
+  );
+  if (!list.length)
+    return empty("Aucune ressource ne correspond à votre recherche.", `<button class="btn small" data-reset-filters>Effacer les filtres</button>`);
+  return `<p class="count-line">${list.length} ressource${list.length > 1 ? "s" : ""}</p><div class="catalog">${list
+    .map((r) => {
+      const book = reserve(r.type),
+        added = cart.includes(r.id),
+        s = resStatus(r),
+        blocked = r.status !== "available",
+        c = cat(r.cat);
+      const action = manage
+        ? `<button class="btn small" data-edit="${r.id}">${ico("edit")} Modifier</button>`
+        : book
+          ? `<button class="btn small" data-book="${r.id}" ${blocked ? "disabled" : ""}>${ico("calendar")} Réserver</button>`
+          : `<button class="btn small ${added ? "selected" : ""}" data-add="${r.id}" ${blocked ? "disabled" : ""} aria-pressed="${added}">${ico(added ? "check" : "plus")} ${added ? "Ajouté" : "Ajouter"}</button>`;
+      return `<article class="resource-card ${added ? "is-added" : ""}" style="--c:${book ? colorOf(r.id) : "var(--purple)"}">
+        <div class="rc-top"><span class="res-icon big">${ico(r.icon)}</span>${badge(s)}</div>
+        <h3>${esc(r.name)}</h3>
+        <p class="rc-meta">${ico("pin")}${esc(r.location)}</p>
+        <div class="rc-foot"><span class="rc-cat">${esc(c?.name)}${c?.approval ? `<em>Sur validation</em>` : ""}</span>${action}</div>
+      </article>`;
+    })
+    .join("")}</div>`;
+}
+
+/* ---------- Planning ---------- */
+const H0 = 8,
+  H1 = 20,
+  HOUR = 52;
+const hourOf = (d) => new Date(d).getHours() + new Date(d).getMinutes() / 60;
+
+function planLabel() {
+  if (planView === "week") {
+    const s = weekStart(planDate),
+      e = addDays(s, 6);
+    const sameMonth = s.getMonth() === e.getMonth();
+    return `${s.getDate()}${sameMonth ? "" : " " + s.toLocaleDateString("fr-FR", { month: "short" })} – ${e.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}`;
+  }
+  if (planView === "list") return "Les 30 prochains jours";
+  return longDay(planDate);
+}
+function planChips() {
+  const list = reservables();
+  return (
+    list
+      .map(
+        (r) =>
+          `<button class="chip ${planHidden.includes(r.id) ? "off" : ""}" data-chip="${r.id}" style="--c:${colorOf(r.id)}" aria-pressed="${!planHidden.includes(r.id)}"><i></i>${esc(r.name.split(" — ")[0])}</button>`,
+      )
+      .join("") + (planHidden.length ? `<button class="chip reset" data-chip="all">Tout afficher</button>` : "")
+  );
+}
+// Une entrée par ressource réservée et par jour traversé.
+function bookingsBetween(from, to) {
+  const out = [];
+  db.requests
+    .filter((r) => r.kind === "booking" && ["approved", "pending"].includes(r.status) && new Date(r.start) < to && new Date(r.end) > from)
+    .forEach((r) => r.ids.forEach((id) => resource(id) && !planHidden.includes(id) && out.push({ r, res: resource(id) })));
+  return out;
+}
+function segment(r, day) {
+  const s = Math.max(new Date(r.start), atHour(day, H0)),
+    e = Math.min(new Date(r.end), atHour(day, H1));
+  return e > s ? { s: new Date(s), e: new Date(e) } : null;
+}
+function evLabel(r) {
+  if (!visible(r)) return "Réservé";
+  return esc(r.group || r.name);
+}
+function planBody() {
+  if (planView === "week") return weekView();
+  if (planView === "list") return agendaView();
+  return `<div class="scroll-x">${dayTimeline(planDate)}</div>`;
+}
+
+function weekView() {
+  const ws = weekStart(planDate),
+    now = new Date();
+  const days = [...Array(7)].map((_, i) => addDays(ws, i));
+  const hours = [...Array(H1 - H0)].map((_, i) => H0 + i);
+  const cols = days
+    .map((day) => {
+      const segs = bookingsBetween(atHour(day, H0), atHour(day, H1))
+        .map((x) => ({ ...x, ...segment(x.r, day) }))
+        .filter((x) => x.s);
+      // Les créneaux de 6 h et plus (véhicule à la journée…) deviennent une bande étroite à gauche.
+      const long = segs.filter((g) => g.e - g.s >= 6 * 36e5);
+      const normal = segs.filter((g) => !long.includes(g));
+      layoutLanes(normal);
+      const off = long.length * 26;
+      const nowLine =
+        sameDay(day, now) && hourOf(now) >= H0 && hourOf(now) <= H1
+          ? `<div class="now" style="top:${(hourOf(now) - H0) * HOUR}px"></div>`
+          : "";
+      return `<div class="day-col ${day.getDay() % 6 === 0 ? "weekend" : ""} ${sameDay(day, now) ? "today" : ""} ${day < dayStart(now) ? "past" : ""}" data-day="${localISO(day)}" style="height:${(H1 - H0) * HOUR}px">
+        <div class="ghost" aria-hidden="true"></div>
+        ${long
+          .map((g, i) => {
+            const top = (hourOf(g.s) - H0) * HOUR,
+              h = ((g.e - g.s) / 36e5) * HOUR - 3;
+            return `<button class="ev strip ${g.r.status} ${g.r.user === role ? "mine" : ""}" data-ev="${g.r.id}" style="--c:${colorOf(g.res.id)};top:${top + 1}px;height:${h}px;left:${3 + i * 26}px;width:22px" title="${esc(g.res.name)} · ${hhmm(g.r.start)} – ${hhmm(g.r.end)} · ${evLabel(g.r)}"><span>${esc(g.res.name)} · ${hhmm(g.s)} – ${hhmm(g.e)}</span></button>`;
+          })
+          .join("")}
+        ${normal
+          .map((g) => {
+            const top = (hourOf(g.s) - H0) * HOUR,
+              h = Math.max(22, ((g.e - g.s) / 36e5) * HOUR - 3);
+            return `<button class="ev ${g.r.status} ${g.r.user === role ? "mine" : ""} ${h < 46 ? "short" : ""}" data-ev="${g.r.id}" style="--c:${colorOf(g.res.id)};top:${top + 1}px;height:${h}px;left:calc(${off}px + (100% - ${off}px) * ${g.lane / g.lanes} + 3px);width:calc((100% - ${off}px) / ${g.lanes} - 6px)" title="${esc(g.res.name)} · ${hhmm(g.r.start)} – ${hhmm(g.r.end)}">
+              <b>${hhmm(g.s)} – ${hhmm(g.e)}</b><span>${esc(g.res.name.split(" — ")[0])}</span><small>${g.r.status === "pending" ? "En attente · " : ""}${evLabel(g.r)}</small></button>`;
+          })
+          .join("")}
+        ${nowLine}
+      </div>`;
+    })
+    .join("");
+  return `<div class="scroll-x"><div class="week">
+    <div class="week-head"><span></span>${days
+      .map(
+        (d) =>
+          `<button class="${sameDay(d, now) ? "today" : ""} ${d.getDay() % 6 === 0 ? "weekend" : ""}" data-goto-day="${localISO(d)}"><small>${d.toLocaleDateString("fr-FR", { weekday: "short" }).replace(".", "")}</small><b>${d.getDate()}</b></button>`,
+      )
+      .join("")}</div>
+    <div class="week-body"><div class="gutter">${hours.map((h) => `<span style="top:${(h - H0) * HOUR}px">${h}:00</span>`).join("")}</div>${cols}</div>
+  </div></div>`;
+}
+
+function layoutLanes(segs) {
+  segs.sort((a, b) => a.s - b.s || b.e - a.e);
+  let cluster = [],
+    end = 0;
+  const flush = () => {
+    const lanes = [];
+    cluster.forEach((g) => {
+      let i = lanes.findIndex((e) => e <= g.s);
+      if (i < 0) i = lanes.push(0) - 1;
+      lanes[i] = g.e;
+      g.lane = i;
+    });
+    cluster.forEach((g) => (g.lanes = lanes.length));
+    cluster = [];
+    end = 0;
+  };
+  segs.forEach((g) => {
+    if (cluster.length && g.s >= end) flush();
+    cluster.push(g);
+    end = Math.max(end, +g.e);
+  });
+  if (cluster.length) flush();
+}
+
+function dayTimeline(day, compact = false) {
+  const now = new Date();
+  const span = H1 - H0;
+  const pct = (h) => ((h - H0) / span) * 100;
+  const res = reservables().filter((r) => compact || !planHidden.includes(r.id));
+  const all = db.requests.filter(
+    (r) => r.kind === "booking" && ["approved", "pending"].includes(r.status) && new Date(r.start) < atHour(day, H1) && new Date(r.end) > atHour(day, H0),
+  );
+  const nowLine = sameDay(day, now) && hourOf(now) >= H0 && hourOf(now) <= H1 ? `<div class="now v" style="left:${pct(hourOf(now))}%"></div>` : "";
+  return `<div class="timeline ${compact ? "compact" : ""}">
+    <div class="tl-head"><span></span><div class="tl-hours">${[...Array(span + 1)]
+      .map((_, i) => (i % (compact ? 2 : 1) === 0 ? `<span style="left:${(i / span) * 100}%">${H0 + i}h</span>` : ""))
+      .join("")}</div></div>
+    ${res
+      .map((x) => {
+        const bars = all
+          .filter((r) => r.ids.includes(x.id))
+          .map((r) => {
+            const g = segment(r, day);
+            if (!g) return "";
+            return `<button class="bar ${r.status} ${r.user === role ? "mine" : ""}" data-ev="${r.id}" style="left:${pct(hourOf(g.s))}%;width:${pct(hourOf(g.e)) - pct(hourOf(g.s))}%" title="${hhmm(r.start)} – ${hhmm(r.end)} · ${evLabel(r)}"><b>${hhmm(g.s)}</b><span>${evLabel(r)}</span></button>`;
+          })
+          .join("");
+        return `<div class="tl-row" style="--c:${colorOf(x.id)}">
+          <div class="tl-name"><i></i><span><b>${esc(x.name.split(" — ")[0])}</b><small>${esc(x.location.split(" · ").pop())}</small></span></div>
+          <div class="tl-track ${x.status !== "available" ? "blocked" : ""}" data-track="${x.id}" data-day="${localISO(day)}"><div class="ghost" aria-hidden="true"></div>${bars}${nowLine}</div>
+        </div>`;
+      })
+      .join("")}
+  </div>`;
+}
+
+function agendaView() {
+  const from = dayStart(new Date()),
+    to = addDays(from, 30);
+  const list = bookingsBetween(from, to).sort((a, b) => a.r.start.localeCompare(b.r.start));
+  if (!list.length) return empty("Aucune réservation sur cette période.");
+  const byDay = {};
+  list.forEach((x) => (byDay[dayStart(x.r.start).toISOString()] ??= []).push(x));
+  return `<div class="agenda">${Object.entries(byDay)
+    .map(
+      ([d, items]) => `<div class="agenda-day"><h3><b>${new Date(d).getDate()}</b><span>${longDay(d).split(" ")[0]}<small>${new Date(d).toLocaleDateString("fr-FR", { month: "long" })}</small></span></h3>
+      <div>${items
+        .map(
+          ({ r, res }) => `<button class="agenda-item ${r.status} ${r.user === role ? "mine" : ""}" data-ev="${r.id}" style="--c:${colorOf(res.id)}">
+          <span class="agenda-time">${hhmm(r.start)}<small>${sameDay(r.start, r.end) ? hhmm(r.end) : fmt(r.end, true)}</small></span>
+          <span class="agenda-main"><b>${esc(res.name)}</b><small>${evLabel(r)}${visible(r) && r.purpose ? ` · ${esc(r.purpose)}` : ""}</small></span>
+          ${r.status === "pending" ? badge("pending") : r.user === role ? '<span class="badge s-mine">Vous</span>' : ""}
+        </button>`,
+        )
+        .join("")}</div></div>`,
+    )
+    .join("")}</div>`;
+}
+
+function updatePlan(dir = 0) {
+  $("#plan-label").textContent = planLabel();
+  $("#plan-body").innerHTML = planBody();
+  $("#plan-chips").innerHTML = planChips();
+  bindPlan();
+  scrollToNow();
+  if (dir) slide($("#plan-body"), dir);
+  else reveal($$("#plan-body .ev, #plan-body .bar, #plan-body .agenda-day"), { y: 6, step: 16, duration: 320, max: 40 });
+}
+
+function bindPlan() {
+  $$("[data-chip]").forEach(
+    (b) =>
+      (b.onclick = () => {
+        const id = b.dataset.chip;
+        if (id === "all") planHidden = [];
+        else {
+          const n = +id;
+          const visibleCount = reservables().length - planHidden.length;
+          if (planHidden.includes(n)) planHidden = planHidden.filter((x) => x !== n);
+          else if (visibleCount > 1) planHidden.push(n);
+        }
+        updatePlan();
+      }),
+  );
+  $$("[data-goto-day]").forEach(
+    (b) =>
+      (b.onclick = () => {
+        planDate = dayStart(b.dataset.gotoDay);
+        planView = "day";
+        render();
+      }),
+  );
+  bindSlots();
+}
+
+// Créneaux libres : survol = aperçu, clic = nouvelle réservation pré-remplie.
+function bindSlots(root = document) {
+  const snap = (h) => Math.min(H1 - 1, Math.max(H0, Math.floor(h * 2) / 2));
+  $$(".day-col", root).forEach((col) => {
+    const ghost = $(".ghost", col);
+    const hourAt = (e) => snap(H0 + (e.clientY - col.getBoundingClientRect().top) / HOUR);
+    col.onmousemove = (e) => {
+      if (e.target.closest(".ev") || col.classList.contains("past")) return (ghost.style.opacity = 0);
+      const h = hourAt(e);
+      ghost.style.cssText = `opacity:1;top:${(h - H0) * HOUR}px;height:${HOUR}px`;
+      ghost.textContent = `+ ${pad(Math.floor(h))}:${h % 1 ? "30" : "00"}`;
+    };
+    col.onmouseleave = () => (ghost.style.opacity = 0);
+    col.onclick = (e) => {
+      if (e.target.closest(".ev")) return;
+      openBooking({ date: dayStart(col.dataset.day), hour: hourAt(e) });
+    };
+  });
+  $$(".tl-track", root).forEach((t) => {
+    const ghost = $(".ghost", t);
+    const hourAt = (e) => {
+      const b = t.getBoundingClientRect();
+      return snap(H0 + ((e.clientX - b.left) / b.width) * (H1 - H0));
+    };
+    t.onmousemove = (e) => {
+      if (e.target.closest(".bar") || t.classList.contains("blocked")) return (ghost.style.opacity = 0);
+      const h = hourAt(e);
+      ghost.style.cssText = `opacity:1;left:${((h - H0) / (H1 - H0)) * 100}%;width:${100 / (H1 - H0)}%`;
+    };
+    t.onmouseleave = () => (ghost.style.opacity = 0);
+    t.onclick = (e) => {
+      if (e.target.closest(".bar") || t.classList.contains("blocked")) return;
+      openBooking({ resId: +t.dataset.track, date: dayStart(t.dataset.day), hour: hourAt(e) });
+    };
+  });
+  $$("[data-ev]", root).forEach(
+    (b) =>
+      (b.onclick = (e) => {
+        e.stopPropagation();
+        const r = db.requests.find((q) => q.id === +b.dataset.ev);
+        if (visible(r)) detail(r.id);
+        else toast(`${resource(r.ids[0])?.name} est réservé de ${hhmm(r.start)} à ${hhmm(r.end)}.`, "warn");
+      }),
+  );
+}
+
+/* ---------- Réservation d’un espace ---------- */
+const timeOptions = (sel) =>
+  [...Array((H1 - H0) * 2 + 1)]
+    .map((_, i) => {
+      const h = H0 + i / 2,
+        v = `${pad(Math.floor(h))}:${h % 1 ? "30" : "00"}`;
+      return `<option value="${v}" ${v === sel ? "selected" : ""}>${v}</option>`;
+    })
+    .join("");
+const dateValue = (d) => localISO(d).slice(0, 10);
+
+function openBooking({ resId, date, hour } = {}) {
+  const list = reservables();
+  const res = resource(resId) || list.find((r) => !planHidden.includes(r.id) && r.status === "available") || list[0];
+  const now = new Date();
+  date = date || dayStart(now);
+  if (hour == null) hour = sameDay(date, now) ? Math.min(H1 - 2, Math.max(H0, Math.ceil(hourOf(now) * 2) / 2)) : 9;
+  const t = (h) => `${pad(Math.floor(h))}:${h % 1 ? "30" : "00"}`;
+  const groups = Object.entries(types)
+    .filter(([k]) => reserve(k))
+    .map(
+      ([k, label]) =>
+        `<optgroup label="${label}">${list
+          .filter((r) => r.type === k)
+          .map((r) => `<option value="${r.id}" ${r.id === res.id ? "selected" : ""} ${r.status !== "available" ? "disabled" : ""}>${esc(r.name)}</option>`)
+          .join("")}</optgroup>`,
+    )
+    .join("");
+  modal(
+    "Réserver un espace",
+    `<form id="booking-form" class="modal-body" novalidate>
+      <label class="field">Espace ou véhicule<select name="res">${groups}</select></label>
+      <div class="form-row three">
+        <label class="field">Date<input name="date" type="date" required value="${dateValue(date)}" min="${dateValue(now)}"></label>
+        <label class="field">De<select name="from">${timeOptions(t(hour))}</select></label>
+        <label class="field">À<select name="to">${timeOptions(t(Math.min(H1, hour + 2)))}</select></label>
+      </div>
+      <label class="field vehicle-only">Retour du véhicule le<input name="endDate" type="date" value="${dateValue(date)}" min="${dateValue(now)}"></label>
+      <div class="avail" id="avail"></div>
+      <label class="field">Motif<input name="purpose" required maxlength="120" placeholder="Ex. travail de groupe, tournage, réunion…"></label>
+      ${role === "professor" ? '<label class="field">Groupe ou classe <span class="opt">facultatif</span><input name="group" placeholder="Ex. B2 Création digitale" maxlength="80"></label>' : ""}
+      <p class="form-note" id="booking-note"></p>
+    </form>`,
+    `<button class="btn" data-close>Annuler</button><button class="btn primary" form="booking-form" type="submit">Réserver</button>`,
+  );
+  const form = $("#booking-form");
+  const read = () => {
+    const f = Object.fromEntries(new FormData(form));
+    const r = resource(+f.res);
+    const endDate = r.type === "vehicle" && f.endDate ? f.endDate : f.date;
+    return { r, f, start: `${f.date}T${f.from}`, end: `${endDate}T${f.to}` };
+  };
+  const check = () => {
+    const { r, f, start, end } = read();
+    form.classList.toggle("is-vehicle", r.type === "vehicle");
+    $("#avail").innerHTML = availStrip(r, f.date, start, end);
+    const note = $("#booking-note");
+    const clash = conflict([r.id], start, end);
+    let msg = "",
+      tone = "";
+    if (!f.date) msg = "Choisissez une date.";
+    else if (new Date(start) < new Date()) (msg = "Ce créneau est déjà passé."), (tone = "error");
+    else if (new Date(end) <= new Date(start)) (msg = "L’heure de fin doit être après l’heure de début."), (tone = "error");
+    else if (clash) (msg = `Déjà réservé de ${hhmm(clash.start)} à ${hhmm(clash.end)}. Choisissez un autre horaire.`), (tone = "error");
+    else if (cat(r.cat)?.approval) (msg = "Créneau libre. Cette réservation sera validée par l’accueil."), (tone = "info");
+    else (msg = "Créneau libre. La réservation est confirmée immédiatement."), (tone = "ok");
+    note.textContent = msg;
+    note.className = `form-note ${tone}`;
+    return tone === "ok" || tone === "info";
+  };
+  form.addEventListener("input", check);
+  form.addEventListener("change", check);
+  check();
+  form.onsubmit = (e) => {
+    e.preventDefault();
+    if (!check()) return pop($("#booking-note"));
+    const { r, f, start, end } = read();
+    if (!f.purpose.trim()) {
+      $("#booking-note").textContent = "Indiquez le motif de la réservation.";
+      $("#booking-note").className = "form-note error";
+      form.purpose.focus();
+      return;
+    }
+    const status = cat(r.cat)?.approval ? "pending" : "approved";
+    const req = {
+      id: Math.max(1000, ...db.requests.map((q) => q.id)) + 1,
+      ids: [r.id],
+      user: role,
+      name: users[role].name,
+      kind: "booking",
+      start,
+      end,
+      status,
+      purpose: f.purpose.trim(),
+      ...(f.group ? { group: f.group.trim() } : {}),
+      created: new Date().toISOString(),
+    };
+    db.requests.push(req);
+    persist(`${r.name} réservé par ${users[role].name} · ${labels[status]}`);
+    closeModal();
+    planDate = dayStart(start);
+    if (view === "planning") updatePlan();
+    else render();
+    toast(status === "pending" ? "Réservation envoyée pour validation." : `C’est noté : ${r.name.split(" — ")[0]}, ${relDay(start)} de ${hhmm(start)} à ${hhmm(end)}.`);
+  };
+}
+
+function availStrip(r, date, start, end) {
+  if (!date) return "";
+  const day = dayStart(date);
+  const span = H1 - H0;
+  const pct = (h) => Math.max(0, Math.min(100, ((h - H0) / span) * 100));
+  const busy = db.requests
+    .filter((q) => q.ids.includes(r.id) && ["approved", "pending"].includes(q.status))
+    .map((q) => segment(q, day))
+    .filter(Boolean);
+  const sel = segment({ start, end }, day);
+  return `<div class="avail-label"><span>Disponibilités ${relDay(day) === "aujourd’hui" ? "aujourd’hui" : relDay(day).replace(/^le /, "du ")}</span><span class="avail-key"><i class="k-busy"></i>Occupé <i class="k-sel"></i>Votre créneau</span></div>
+    <div class="avail-track">${busy.map((g) => `<span class="busy" style="left:${pct(hourOf(g.s))}%;width:${pct(hourOf(g.e)) - pct(hourOf(g.s))}%"></span>`).join("")}${
+      sel ? `<span class="sel" style="left:${pct(hourOf(sel.s))}%;width:${pct(hourOf(sel.e)) - pct(hourOf(sel.s))}%"></span>` : ""
+    }</div>
+    <div class="avail-hours">${[8, 10, 12, 14, 16, 18, 20].map((h) => `<span style="left:${pct(h)}%">${h}h</span>`).join("")}</div>`;
+}
+
+/* ---------- Sélection de matériel (emprunt) ---------- */
+function openCart() {
+  const items = cart.map(resource).filter(Boolean);
+  const needsApproval = items.some((r) => cat(r.cat)?.approval);
+  modal(
+    "Ma sélection",
+    items.length
+      ? `<form id="request-form" class="modal-body">
+        <div class="cart-list">${items.map((r) => `<div class="cart-item"><span class="res-icon">${ico(r.icon)}</span><span><b>${esc(r.name)}</b><small>${esc(r.code)}</small></span><button type="button" class="icon-btn ghost" data-remove="${r.id}" aria-label="Retirer ${esc(r.name)}">${ico("close")}</button></div>`).join("")}</div>
+        <div class="form-row"><label class="field">Retrait<input name="start" type="datetime-local" required value="${stamp(1)}" min="${stamp(0, 0)}"></label><label class="field">Retour<input name="end" type="datetime-local" required value="${stamp(3, 18)}"></label></div>
+        ${role === "professor" ? '<label class="field">Groupe ou classe <span class="opt">facultatif</span><input name="group" placeholder="Ex. B2 Création digitale" maxlength="80"></label>' : ""}
+        <label class="field">Pour quel projet ?<textarea name="purpose" rows="2" required placeholder="Quelques mots suffisent" maxlength="300"></textarea></label>
+        <p class="form-note ${needsApproval ? "info" : "ok"}">${needsApproval ? "Une partie du matériel doit être validée par l’accueil. Vous recevrez une réponse sous 24 h." : "Le matériel est réservé dès l’envoi. Retrait à l’accueil du bâtiment A."}</p>
+        <p id="form-error" class="form-note error" role="alert" hidden></p>
+      </form>`
+      : `<div class="modal-body">${empty("Votre sélection est vide.", `<button class="btn small" data-close data-nav="catalog">Parcourir le catalogue</button>`)}</div>`,
+    items.length ? `<button class="btn" data-close>Continuer</button><button class="btn primary" form="request-form" type="submit">Envoyer la demande</button>` : "",
+  );
+  $$("#modal [data-nav]").forEach((b) => b.addEventListener("click", () => navigate(b.dataset.nav)));
+  $$("[data-remove]").forEach(
+    (b) =>
+      (b.onclick = () => {
+        cart = cart.filter((id) => id !== +b.dataset.remove);
+        renderChrome();
+        refreshCatalog();
+        openCart();
+      }),
+  );
+  $("#request-form")?.addEventListener("submit", submitLoan);
+}
+
+function conflict(ids, start, end, exclude) {
+  return db.requests.find(
+    (q) =>
+      q.id !== exclude &&
+      ["approved", "pending"].includes(q.status) &&
+      q.ids.some((id) => ids.includes(id)) &&
+      ((q.kind === "loan" && q.status === "approved" && new Date(q.end) < new Date()) ||
+        (new Date(start) < new Date(q.end) && new Date(end) > new Date(q.start))),
+  );
+}
+
+function submitLoan(e) {
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(e.target)),
+    ids = [...cart];
+  let error = "";
+  if (!ids.length) error = "Sélectionnez au moins une ressource.";
+  else if (new Date(data.start) < new Date()) error = "La date de retrait doit être dans le futur.";
+  else if (new Date(data.end) <= new Date(data.start)) error = "Le retour doit être après le retrait.";
+  else if (ids.some((id) => resource(id).status !== "available" || resource(id).retired)) error = "Une ressource n’est plus disponible.";
+  else if (!data.purpose.trim()) error = "Indiquez en quelques mots votre projet.";
+  else {
+    const c = conflict(ids, data.start, data.end);
+    if (c) error = `${resource(c.ids.find((id) => ids.includes(id)))?.name} est déjà pris sur cette période. Essayez d’autres dates.`;
+  }
+  if (error) {
+    const el = $("#form-error");
+    el.hidden = false;
+    el.textContent = error;
+    pop(el);
+    return;
+  }
+  const status = ids.some((id) => cat(resource(id).cat).approval) ? "pending" : "approved";
+  db.requests.push({
+    id: Math.max(1000, ...db.requests.map((r) => r.id)) + 1,
+    ids,
+    user: role,
+    name: users[role].name,
+    kind: "loan",
+    status,
+    ...data,
+    purpose: data.purpose.trim(),
+    created: new Date().toISOString(),
+  });
+  cart = [];
+  persist(`Nouvelle demande de ${users[role].name} · ${labels[status]}`);
+  closeModal();
+  navigate("requests");
+  toast(status === "pending" ? "Demande envoyée. L’accueil vous répond sous 24 h." : "C’est réservé ! Retrait à l’accueil.");
+}
+
+/* ---------- Détail d’une demande ---------- */
+function steps(r) {
+  const s = reqStatus(r);
+  if (s === "rejected") return `<div class="callout pink">${ico("alert")}<span><b>Demande refusée</b>${r.reason ? esc(r.reason) : ""}</span></div>`;
+  if (s === "cancelled") return `<div class="callout">${ico("close")}<span><b>Demande annulée</b></span></div>`;
+  const list = r.kind === "loan" ? ["Envoyée", "Validée", "En cours", "Rendue"] : ["Envoyée", "Validée", "En cours", "Terminée"];
+  const idx = { pending: 1, approved: 2, active: 3, late: 3, returned: 4, finished: 4 }[s] ?? 0;
+  return `<ol class="steps">${list
+    .map((t, i) => `<li class="${i < idx - 1 || idx === list.length ? "done" : i === idx - 1 ? "current" : ""} ${s === "late" && i === 2 ? "late" : ""}"><span>${i < idx - 1 || idx === list.length ? ico("check") : ""}</span>${s === "late" && i === 2 ? "En retard" : t}</li>`)
+    .join("")}</ol>`;
+}
+
+function detail(id) {
+  const r = db.requests.find((x) => x.id === id);
+  if (!r || !visible(r)) return;
+  const s = reqStatus(r);
+  const canCancel = ["pending", "approved"].includes(r.status) && new Date(r.start) > new Date();
+  modal(
+    `${r.kind === "loan" ? "Emprunt" : "Réservation"} n° ${r.id}`,
+    `<div class="modal-body">
+      ${steps(r)}
+      <div class="cart-list">${r.ids
+        .map(
+          (rid) =>
+            `<div class="cart-item"><span class="res-icon">${ico(resource(rid)?.icon)}</span><span><b>${esc(resource(rid)?.name)}</b><small>${esc(resource(rid)?.location)}</small></span>${r.conditions ? badge(r.conditions[rid] === "RAS" ? "returned" : r.conditions[rid] === "Endommagé" ? "maintenance" : "unavailable") : ""}</div>`,
+        )
+        .join("")}</div>
+      <dl class="facts">
+        <div><dt>Quand</dt><dd>${dateRange(r)}</dd></div>
+        <div><dt>Demandé par</dt><dd>${esc(r.name)}${r.group ? ` · ${esc(r.group)}` : ""}</dd></div>
+        ${r.purpose ? `<div><dt>Motif</dt><dd>${esc(r.purpose)}</dd></div>` : ""}
+        ${r.status === "returned" ? `<div><dt>Retour</dt><dd>Contrôlé par ${esc(r.returnBy)} le ${fmt(r.returnAt, true)}</dd></div>` : ""}
+      </dl>
+      ${s === "late" ? `<div class="callout pink">${ico("alert")}<span><b>Retour en retard</b>Prévu le ${fmt(r.end, true)}.</span></div>` : ""}
+    </div>`,
+    `${canCancel ? '<button class="btn danger-text" id="cancel-request">Annuler la demande</button>' : ""}
+     ${role === "admin" && r.status === "pending" ? `<button class="btn" data-reject="${r.id}">Refuser</button><button class="btn primary" data-approve="${r.id}">${ico("check")} Valider</button>` : ""}
+     ${role === "admin" && r.kind === "loan" && ["active", "late"].includes(s) ? '<button class="btn primary" id="return">Enregistrer le retour</button>' : ""}
+     ${!canCancel && !(role === "admin" && (r.status === "pending" || ["active", "late"].includes(s))) ? '<button class="btn" data-close>Fermer</button>' : ""}`,
+  );
+  $("#cancel-request")?.addEventListener("click", () => {
+    if (!confirm("Annuler cette demande ?")) return;
+    r.status = "cancelled";
+    persist(`Demande n° ${r.id} annulée par ${users[role].name}`);
+    closeModal();
+    refresh();
+    toast("Demande annulée.");
+  });
+  bindDecisions($("#modal"));
+  $("#return")?.addEventListener("click", () => returnForm(r));
+}
+
+function approve(r) {
+  if (role !== "admin") return;
+  if (conflict(r.ids, r.start, r.end, r.id) || r.ids.some((id) => resource(id).status !== "available" || resource(id).retired))
+    return toast("Impossible de valider : une ressource n’est plus disponible.", "warn");
+  if (new Date(r.end) <= new Date()) return toast("Cette demande a expiré. Refusez-la pour libérer le créneau.", "warn");
+  r.status = "approved";
+  persist(`Demande n° ${r.id} validée par ${users[role].name}`);
+  closeModal();
+  const card = $(`.approval [data-approve="${r.id}"]`)?.closest(".approval");
+  const done = () => {
+    refresh();
+    toast(`Demande de ${r.name} validée.`);
+  };
+  if (card && motionOK)
+    card.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translateX(40px)" }], { duration: 260, easing: ease }).onfinish = done;
+  else done();
+}
+function reject(r) {
+  modal(
+    "Refuser la demande",
+    `<form id="reject-form" class="modal-body"><p class="muted">${esc(r.name)} recevra ce message.</p><label class="field">Motif du refus<textarea name="reason" required maxlength="300" rows="3" placeholder="Ex. le matériel est déjà prévu pour un cours ce jour-là."></textarea></label></form>`,
+    `<button class="btn" data-close>Annuler</button><button type="submit" form="reject-form" class="btn primary">Refuser la demande</button>`,
+  );
+  $("#reject-form").onsubmit = (e) => {
+    e.preventDefault();
+    if (role !== "admin") return;
+    r.status = "rejected";
+    r.reason = new FormData(e.target).get("reason").trim();
+    persist(`Demande n° ${r.id} refusée : ${r.reason}`);
+    closeModal();
+    refresh();
+    toast("Demande refusée.");
+  };
+}
+function bindDecisions(root = document) {
+  $$("[data-approve]", root).forEach((b) => (b.onclick = () => approve(db.requests.find((r) => r.id === +b.dataset.approve))));
+  $$("[data-reject]", root).forEach((b) => (b.onclick = () => reject(db.requests.find((r) => r.id === +b.dataset.reject))));
+}
+
+function returnForm(r) {
+  modal(
+    "Contrôler le retour",
+    `<form id="return-form" class="modal-body"><p class="muted">Indiquez l’état de chaque ressource.</p>${r.ids
+      .map(
+        (id) => `<fieldset class="condition"><legend>${esc(resource(id).name)}</legend>${["RAS", "Endommagé", "Perdu"]
+          .map((s, i) => `<label><input type="radio" name="${id}" value="${s}" required ${i === 0 ? "checked" : ""}><span>${s === "RAS" ? "Bon état" : s}</span></label>`)
+          .join("")}</fieldset>`,
+      )
+      .join("")}<p class="hint">Endommagé : la ressource passe en maintenance. Perdu : elle devient indisponible.</p></form>`,
+    `<button class="btn" data-close>Annuler</button><button class="btn primary" form="return-form">Confirmer le retour</button>`,
+  );
+  $("#return-form").onsubmit = (e) => {
+    e.preventDefault();
+    if (role !== "admin") return;
+    r.conditions = Object.fromEntries(new FormData(e.target));
+    for (const [id, state] of Object.entries(r.conditions))
+      resource(+id).status = state === "RAS" ? "available" : state === "Endommagé" ? "maintenance" : "unavailable";
+    r.status = "returned";
+    r.returnAt = new Date().toISOString();
+    r.returnBy = users[role].name;
+    persist(`Retour n° ${r.id} contrôlé par ${r.returnBy} · ${Object.entries(r.conditions).map(([id, s]) => resource(+id).name + " : " + s).join(", ")}`);
+    closeModal();
+    refresh();
+    toast("Retour enregistré.");
+  };
+}
+
+/* ---------- Gestion ---------- */
+function editResource(id) {
+  if (role !== "admin") return;
+  const r = id ? resource(id) : { name: "", code: "", type: "physical", cat: db.categories[0].id, location: "", status: "available" };
+  const busy =
+    id && db.requests.some((q) => q.ids.includes(id) && ["pending", "approved"].includes(q.status) && (q.kind === "loan" || new Date(q.end) > new Date()));
+  modal(
+    id ? "Modifier la ressource" : "Nouvelle ressource",
+    `<form id="resource-form" class="modal-body">
+      <label class="field">Nom<input name="name" value="${esc(r.name)}" required maxlength="100"></label>
+      <div class="form-row"><label class="field">Référence<input name="code" value="${esc(r.code)}" required maxlength="50"></label>
+      <label class="field">Type<select name="type" ${id ? "disabled" : ""}>${Object.entries(types).map(([k, t]) => `<option value="${k}" ${r.type === k ? "selected" : ""}>${t}</option>`).join("")}</select></label></div>
+      <label class="field">Catégorie<select name="cat">${db.categories.map((c) => `<option value="${c.id}" ${r.cat === c.id ? "selected" : ""}>${esc(c.name)}</option>`).join("")}</select></label>
+      <label class="field">Emplacement<input name="location" value="${esc(r.location)}" required maxlength="120" placeholder="Ex. Bâtiment A · 24 places"></label>
+      <label class="field">État<select name="status" ${busy ? "disabled" : ""}>${["available", "maintenance", "unavailable"].map((s) => `<option value="${s}" ${r.status === s ? "selected" : ""}>${labels[s]}</option>`).join("")}</select></label>
+      ${busy ? '<p class="form-note info">Une demande est en cours sur cette ressource : son état et son retrait sont bloqués jusqu’à sa clôture.</p>' : ""}
+      <p id="resource-error" hidden class="form-note error"></p>
+    </form>`,
+    `${id ? `<button type="button" class="btn danger-text" id="retire" ${busy ? "disabled" : ""}>Retirer du catalogue</button>` : ""}<button class="btn" data-close>Annuler</button><button class="btn primary" form="resource-form">Enregistrer</button>`,
+  );
+  $("#resource-form").onsubmit = (e) => {
+    e.preventDefault();
+    const values = Object.fromEntries(new FormData(e.target));
+    if (db.resources.some((x) => x.id !== id && x.code.toLowerCase() === values.code.trim().toLowerCase())) {
+      $("#resource-error").hidden = false;
+      $("#resource-error").textContent = "Cette référence est déjà utilisée.";
+      return;
+    }
+    if (id) Object.assign(r, values);
+    else
+      db.resources.push({
+        ...values,
+        id: Math.max(...db.resources.map((x) => x.id)) + 1,
+        icon: { physical: "laptop", key: "key", license: "code", room: "room", amphi: "room", vehicle: "car" }[values.type],
+      });
+    persist(`Ressource ${id ? "modifiée" : "ajoutée"} : ${values.name}`);
+    closeModal();
+    render();
+    toast("Ressource enregistrée.");
+  };
+  $("#retire")?.addEventListener("click", () => {
+    if (busy || !confirm(`Retirer « ${r.name} » du catalogue ? Son historique est conservé.`)) return;
+    r.retired = true;
+    persist(`Ressource retirée du catalogue : ${r.name}`);
+    closeModal();
+    render();
+    toast("Ressource retirée du catalogue.");
+  });
+}
+
+function addCategory() {
+  if (role !== "admin") return;
+  modal(
+    "Nouvelle catégorie",
+    `<form id="category-form" class="modal-body"><label class="field">Nom<input name="name" required maxlength="70"></label>
+      <label class="switch"><input name="approval" type="checkbox"><span class="track"><span></span></span><span class="switch-label">Les demandes doivent être validées</span></label>
+      <p id="category-error" class="form-note error" hidden></p></form>`,
+    `<button class="btn" data-close>Annuler</button><button class="btn primary" form="category-form">Créer</button>`,
+  );
+  $("#category-form").onsubmit = (e) => {
+    e.preventDefault();
+    const f = new FormData(e.target),
+      name = f.get("name").trim();
+    if (!name || db.categories.some((c) => c.name.toLowerCase() === name.toLowerCase())) {
+      const el = $("#category-error");
+      el.hidden = false;
+      el.textContent = "Ce nom existe déjà ou est vide.";
+      return;
+    }
+    db.categories.push({ id: "cat-" + Date.now(), name, approval: f.has("approval") });
+    persist(`Catégorie créée : ${name}`);
+    closeModal();
+    render();
+    toast("Catégorie ajoutée.");
+  };
+}
+
+/* ---------- Liaisons ---------- */
+function refresh() {
+  if (view === "planning") {
+    renderChrome();
+    updatePlan();
+  } else render();
+}
+function refreshCatalog() {
+  const box = $("#catalog-results");
+  if (!box) return;
+  box.innerHTML = catalogCards();
+  bindCards();
+}
+
+function moveThumb(seg) {
+  const btns = $$("button", seg);
+  seg.style.setProperty("--i", btns.findIndex((b) => b.classList.contains("active")));
+}
+
+function bind() {
+  $$("#main [data-nav]").forEach((b) => (b.onclick = () => navigate(b.dataset.nav)));
+  $$("#main [data-action]").forEach(
+    (b) =>
+      (b.onclick = () => {
+        const a = b.dataset.action;
+        if (a === "cart") openCart();
+        else if (a === "book") openBooking({ date: view === "planning" ? planDate : undefined });
+        else if (a === "loan") {
+          filter = "loan";
+          navigate("catalog");
+        } else if (a === "add-resource") editResource();
+        else if (a === "add-category") addCategory();
+      }),
+  );
+  $$("[data-detail]").forEach((b) => (b.onclick = () => detail(+b.dataset.detail)));
+  bindDecisions();
+
+  // Contrôles segmentés : la pastille glisse avant le nouveau rendu.
+  $$("[data-filter]").forEach(
+    (b) =>
+      (b.onclick = () => {
+        filter = b.dataset.filter;
+        $$("[data-filter]").forEach((x) => x.classList.toggle("active", x === b));
+        moveThumb(b.parentElement);
+        refreshCatalog();
+        reveal($$(".resource-card"), { y: 8, step: 20, duration: 320 });
+      }),
+  );
+  $$("[data-req]").forEach(
+    (b) =>
+      (b.onclick = () => {
+        reqFilter = b.dataset.req;
+        moveThumb(b.parentElement);
+        setTimeout(() => {
+          render();
+          reveal($$(".req-row"), { y: 6, step: 25, duration: 300 });
+        }, motionOK ? 160 : 0);
+      }),
+  );
+  $$("[data-plan]").forEach(
+    (b) =>
+      (b.onclick = () => {
+        planView = b.dataset.plan;
+        $$("[data-plan]").forEach((x) => x.classList.toggle("active", x === b));
+        moveThumb(b.parentElement);
+        updatePlan();
+      }),
+  );
+  $$("[data-plan-step]").forEach(
+    (b) =>
+      (b.onclick = () => {
+        const dir = +b.dataset.planStep;
+        planDate = addDays(planDate, dir * (planView === "week" ? 7 : planView === "list" ? 0 : 1));
+        updatePlan(dir);
+      }),
+  );
+  $("[data-plan-today]")?.addEventListener("click", () => {
+    const dir = Math.sign(dayStart(new Date()) - planDate);
+    planDate = dayStart(new Date());
+    updatePlan(-dir);
+  });
+
+  $("#search")?.addEventListener("input", (e) => {
+    query = e.target.value;
+    refreshCatalog();
+  });
+  $("#category")?.addEventListener("change", (e) => {
+    category = e.target.value;
+    refreshCatalog();
+  });
+  $("#status-filter")?.addEventListener("change", (e) => {
+    statusFilter = e.target.value;
+    refreshCatalog();
+  });
+  $$("[data-cat]").forEach(
+    (c) =>
+      (c.onchange = () => {
+        if (role !== "admin") return;
+        cat(c.dataset.cat).approval = c.checked;
+        persist(`Règle de validation modifiée : ${cat(c.dataset.cat).name}`);
+        toast(c.checked ? "Les nouvelles demandes devront être validées." : "Les nouvelles demandes seront acceptées directement.");
+      }),
+  );
+  bindCards();
+  bindSlots();
+  if (view === "planning") bindPlan();
+}
+
+function bindCards() {
+  $$("[data-add]").forEach(
+    (b) =>
+      (b.onclick = () => {
+        const r = resource(+b.dataset.add);
+        const added = cart.includes(r.id);
+        cart = added ? cart.filter((id) => id !== r.id) : [...cart, r.id];
+        b.classList.toggle("selected", !added);
+        b.setAttribute("aria-pressed", !added);
+        b.innerHTML = `${ico(added ? "plus" : "check")} ${added ? "Ajouter" : "Ajouté"}`;
+        b.closest(".resource-card").classList.toggle("is-added", !added);
+        renderChrome();
+        // Le bouton de sélection dans l’en-tête de page suit le compteur.
+        const pageCart = $(".page-actions [data-action=cart]");
+        if (pageCart) {
+          pageCart.innerHTML = `${ico("bag")} Ma sélection${cart.length ? ` · ${cart.length}` : ""}`;
+          pageCart.classList.toggle("primary", cart.length > 0);
+        }
+        pop($(".cart-btn i"));
+        pop(b);
+        if (!added) toast(`${r.name} ajouté à votre sélection.`);
+      }),
+  );
+  $$("[data-book]").forEach((b) => (b.onclick = () => openBooking({ resId: +b.dataset.book })));
+  $$("[data-edit]").forEach((b) => (b.onclick = () => editResource(+b.dataset.edit)));
+  $$("[data-reset-filters]").forEach(
+    (b) =>
+      (b.onclick = () => {
+        query = category = statusFilter = "";
+        filter = "all";
+        render();
+      }),
+  );
+}
 render();
-if(document.modelContext?.registerTool){try{Promise.resolve(document.modelContext.registerTool({name:'stage_resource_request',description:'Sélectionner plusieurs ressources et ouvrir le panier, sans soumettre la demande.',inputSchema:{type:'object',properties:{ids:{type:'array',items:{type:'integer'},minItems:1}},required:['ids'],additionalProperties:false},annotations:{readOnlyHint:false},execute(input){if(!input||!Array.isArray(input.ids)||!input.ids.length||input.ids.some(id=>!Number.isInteger(id)||!resource(id)||resource(id).retired||resource(id).status!=='available'))throw Error('Ressources invalides');const kinds=new Set(input.ids.map(id=>reserve(resource(id).type)?'booking':'loan'));if(kinds.size!==1)throw Error('Séparer emprunts et réservations');const kind=[...kinds][0];cart[kind]=[...new Set(input.ids)];render();openCart(kind);return{staged:cart[kind],kind,submitted:false}}})).catch(()=>{});}catch{}}
+
+/* ---------- Outil WebMCP (si disponible) ---------- */
+if (document.modelContext?.registerTool) {
+  try {
+    Promise.resolve(
+      document.modelContext.registerTool({
+        name: "stage_resource_request",
+        description:
+          "Préparer une demande sans l’envoyer : ajoute du matériel à la sélection d’emprunt, ou ouvre le formulaire de réservation pour un espace.",
+        inputSchema: {
+          type: "object",
+          properties: { ids: { type: "array", items: { type: "integer" }, minItems: 1 } },
+          required: ["ids"],
+          additionalProperties: false,
+        },
+        annotations: { readOnlyHint: false },
+        execute(input) {
+          if (
+            !input ||
+            !Array.isArray(input.ids) ||
+            !input.ids.length ||
+            input.ids.some((id) => !Number.isInteger(id) || !resource(id) || resource(id).retired || resource(id).status !== "available")
+          )
+            throw Error("Ressources invalides");
+          const kinds = new Set(input.ids.map((id) => (reserve(resource(id).type) ? "booking" : "loan")));
+          if (kinds.size !== 1) throw Error("Séparer emprunts et réservations");
+          const kind = [...kinds][0];
+          if (kind === "booking") {
+            if (input.ids.length > 1) throw Error("Un seul espace par réservation");
+            openBooking({ resId: input.ids[0] });
+            return { staged: input.ids, kind, submitted: false };
+          }
+          cart = [...new Set(input.ids)];
+          render();
+          openCart();
+          return { staged: cart, kind, submitted: false };
+        },
+      }),
+    ).catch(() => {});
+  } catch {}
+}
