@@ -1005,9 +1005,58 @@ main {
 .avatars {
   display: flex;
 }
-.avatars .avatar + .avatar {
-  margin-left: -6px;
+.avatars {
+  flex-shrink: 0;
+}
+.avatars .avatar {
   box-shadow: 0 0 0 2px var(--purple-50);
+}
+.avatars .avatar + .avatar {
+  margin-left: -7px;
+}
+.holder-list {
+  display: grid;
+}
+.holder-row {
+  display: grid;
+  grid-template-columns: 1fr auto 150px auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line-soft);
+  font-size: 14px;
+}
+.holder-who {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  min-width: 0;
+}
+.holder-who b {
+  display: block;
+  font-weight: 600;
+}
+.holder-who:hover b {
+  color: var(--purple);
+}
+.holder-who small,
+.holder-when small {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+}
+.holder-qty {
+  font-weight: 700;
+  color: var(--ink-2);
+}
+@media (max-width: 640px) {
+  .holder-row {
+    grid-template-columns: 1fr auto;
+  }
+  .holder-when {
+    grid-column: 1;
+  }
 }
 .stepper {
   display: inline-flex;
@@ -1178,9 +1227,17 @@ main > .track-section + .track-section,
   font-size: 12px;
 }
 .avatar.xs {
-  width: 22px;
-  height: 22px;
-  font-size: 10px;
+  width: 30px;
+  height: 30px;
+  font-size: 11px;
+}
+.avatar.more {
+  background: var(--purple);
+  color: #fff;
+  font-size: 12px;
+}
+.rc-holder.late .avatar.more {
+  background: var(--pink);
 }
 .track-when {
   font-size: 14px;
@@ -1224,14 +1281,48 @@ main > .track-section + .track-section,
 .rc-holder {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  width: 100%;
   margin-top: 12px;
-  padding: 6px 10px 6px 6px;
-  border-radius: var(--r-pill);
+  padding: 7px 12px 7px 7px;
+  border-radius: var(--r-acc);
   background: var(--purple-50);
-  font-size: 12px;
+  font-size: 13px;
+  line-height: 1.3;
   color: var(--ink-2);
   text-align: left;
+  transition: background 0.2s;
+}
+.rc-holder:hover {
+  background: var(--purple-100);
+}
+.rc-holder-text {
+  flex: 1;
+  min-width: 0;
+}
+.rc-holder-text b,
+.rc-holder-text small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rc-holder-text b {
+  font-weight: 600;
+  color: var(--ink);
+}
+.rc-holder-text small {
+  font-size: 12px;
+  color: var(--muted);
+}
+.rc-holder.late small {
+  color: var(--pink-700);
+  font-weight: 600;
+}
+.rc-holder .chev {
+  width: 14px;
+  height: 14px;
+  color: var(--faint);
 }
 .rc-holder.late {
   background: var(--pink-50);

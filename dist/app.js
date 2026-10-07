@@ -873,25 +873,59 @@ function stockLine(r, free, note = "") {
     maint = Math.min(total, r.maint || 0),
     used = Math.max(0, total - maint - free);
   const marks =
-    total <= 12
+    total <= 8
       ? `<span class="dots" aria-hidden="true">${"<i class='f'></i>".repeat(free)}${"<i class='u'></i>".repeat(used)}${"<i class='m'></i>".repeat(maint)}</span>`
       : `<span class="stock-bar" aria-hidden="true"><i style="width:${(free / total) * 100}%"></i></span>`;
   return `<div class="stock ${free ? "" : "none"}">${marks}<span><b>${free}</b> sur ${total} disponible${free > 1 ? "s" : ""}${maint ? ` · ${maint} en réparation` : ""}${note ? `<small>${note}</small>` : ""}</span></div>`;
 }
-// Pour le gestionnaire : qui a la ressource en ce moment.
+// Pour le gestionnaire : qui a la ressource en ce moment. Résumé court, détail au clic.
 function holderLine(res) {
   const list = holding(res).sort((a, b) => a.end.localeCompare(b.end));
   if (!list.length) return "";
-  const late = list.some((q) => reqStatus(q) === "late");
+  const lateCount = list.filter((q) => reqStatus(q) === "late").length;
   const q = list[0];
-  const names =
-    list.length === 1
-      ? `<b>${esc(q.name)}</b>${units(q, res.id) > 1 ? ` (${units(q, res.id)})` : ""} · ${late ? "en retard" : q.kind === "loan" ? `retour ${relDay(q.end)}` : `jusqu’à ${hhmm(q.end)}`}`
-      : `<b>${esc(list[0].name)}</b>, <b>${esc(list[1].name)}</b>${list.length > 2 ? ` +${list.length - 2}` : ""}${late ? " · un retard" : ""}`;
-  return `<button class="rc-holder ${late ? "late" : ""}" data-detail="${q.id}"><span class="avatars">${list
-    .slice(0, 3)
-    .map((x) => `<span class="avatar xs">${initials(x.name)}</span>`)
-    .join("")}</span><span>${q.kind === "loan" ? "Chez" : "Occupé par"} ${names}</span></button>`;
+  const next = list.find((x) => reqStatus(x) !== "late");
+  const when = (x) => (x.kind === "loan" ? `retour ${relDay(x.end)}` : `jusqu’à ${hhmm(x.end)}`);
+  const single = list.length === 1;
+  const title = single
+    ? `${q.kind === "loan" ? "Chez" : "Occupé par"} ${esc(q.name)}${units(q, res.id) > 1 ? ` × ${units(q, res.id)}` : ""}`
+    : `${list.length} emprunteurs`;
+  const sub = lateCount
+    ? single
+      ? "En retard"
+      : `Dont ${lateCount} en retard`
+    : single
+      ? when(q)[0].toUpperCase() + when(q).slice(1)
+      : `Prochain ${when(next)}`;
+  return `<button class="rc-holder ${lateCount ? "late" : ""}" ${single ? `data-detail="${q.id}"` : `data-holders="${res.id}"`}>
+    <span class="avatar xs ${single ? "" : "more"}">${single ? initials(q.name) : list.length}</span>
+    <span class="rc-holder-text"><b>${title}</b><small>${sub}</small></span>${ico("chevR", "chev")}</button>`;
+}
+// Liste complète des emprunteurs d’une ressource.
+function holdersModal(id) {
+  const res = resource(id);
+  const list = holding(res).sort((a, b) => (reqStatus(b) === "late") - (reqStatus(a) === "late") || a.end.localeCompare(b.end));
+  const out = outNow(res);
+  modal(
+    esc(res.name),
+    `<div class="modal-body">
+      <p class="muted">${out} exemplaire${out > 1 ? "s" : ""} sorti${out > 1 ? "s" : ""} sur ${stock(res)} · ${list.length} emprunteur${list.length > 1 ? "s" : ""}</p>
+      <div class="holder-list">${list
+        .map((q) => {
+          const late = reqStatus(q) === "late";
+          return `<div class="holder-row">
+            <button class="holder-who" data-detail="${q.id}"><span class="avatar sm">${initials(q.name)}</span><span><b>${esc(q.name)}</b><small>${esc(q.group || users[q.user]?.label || "")}</small></span></button>
+            <span class="holder-qty">${units(q, id) > 1 ? `× ${units(q, id)}` : ""}</span>
+            <span class="holder-when ${late ? "t-late" : ""}">${late ? `En retard de ${duration(new Date() - new Date(q.end))}` : `Retour ${relDay(q.end)}`}<small>Sorti le ${fmt(q.start)}</small></span>
+            ${q.kind === "loan" ? `<button class="btn small" data-return="${q.id}">Retour</button>` : ""}
+          </div>`;
+        })
+        .join("")}</div>
+    </div>`,
+    `<button class="btn" data-close>Fermer</button>`,
+  );
+  $$("#modal [data-detail]").forEach((b) => (b.onclick = () => detail(+b.dataset.detail)));
+  $$("#modal [data-return]").forEach((b) => (b.onclick = () => returnForm(db.requests.find((r) => r.id === +b.dataset.return))));
 }
 function catalogCards() {
   const manage = view === "manage";
@@ -1801,6 +1835,7 @@ function bindCards() {
   );
   $$("[data-book]").forEach((b) => (b.onclick = () => openBooking({ resId: +b.dataset.book })));
   $$("#catalog-results [data-detail]").forEach((b) => (b.onclick = () => detail(+b.dataset.detail)));
+  $$("#catalog-results [data-holders]").forEach((b) => (b.onclick = () => holdersModal(+b.dataset.holders)));
   $$("[data-edit]").forEach((b) => (b.onclick = () => editResource(+b.dataset.edit)));
   $$("[data-reset-filters]").forEach(
     (b) =>
