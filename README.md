@@ -44,6 +44,15 @@ L’onglet **Réservations** affiche les salles, l’amphithéâtre et les véhi
 
 Les pastilles permettent de masquer ou d’afficher un espace. Les créneaux en attente de validation sont hachurés et vos propres réservations sont entourées. Le formulaire de réservation montre les disponibilités de l’espace et signale un chevauchement avant l’envoi.
 
+## Stock et quantités
+
+Chaque ressource a une quantité en stock (une salle ou un véhicule compte pour 1).
+
+- Le catalogue affiche le stock restant (« 2 sur 4 disponibles ») avec une pastille par exemplaire.
+- Quand tout le stock est sorti, la carte est grisée, le bouton passe à « Plus en stock » et la date du prochain retour est indiquée.
+- Dans « Ma sélection », on choisit le nombre d’exemplaires ; la demande est refusée si le stock ne suffit pas sur la période (les demandes en attente et les retards comptent).
+- Au retour, un exemplaire endommagé part en réparation et un exemplaire perdu est retiré du stock ; le gestionnaire ajuste la quantité et le nombre en réparation dans **Ressources**.
+
 ## Suivi (gestionnaire)
 
 L’onglet **Gestion › Suivi** répond à « qu’est-ce qui est sorti, et chez qui ? » :
@@ -58,6 +67,6 @@ Une recherche filtre par personne, objet ou référence, et le bouton **Retour**
 
 ## Périmètre du prototype
 
-Catalogue, demandes, paniers d’emprunt et de réservation, planning, historique et écrans de gestion. Les données sont conservées dans le `localStorage` de chaque navigateur (clé `mds-campus-v3`). Il n’y a ni serveur, ni authentification réelle, ni base de données partagée : les rôles servent uniquement à simuler les parcours.
+Catalogue, demandes, paniers d’emprunt et de réservation, planning, historique et écrans de gestion. Les données sont conservées dans le `localStorage` de chaque navigateur (clé `mds-campus-v4`). Il n’y a ni serveur, ni authentification réelle, ni base de données partagée : les rôles servent uniquement à simuler les parcours.
 
 Les maquettes Figma ont évolué séparément du prototype HTML. Ce dépôt contient la version du prototype local ; il ne constitue pas une nouvelle intégration des dernières maquettes.

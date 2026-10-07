@@ -96,7 +96,7 @@ const relDay = (d) => {
 };
 
 /* ---------- Données ---------- */
-const STORE = "mds-campus-v3";
+const STORE = "mds-campus-v4";
 const types = {
   physical: "Matériel",
   key: "Clés",
@@ -135,29 +135,31 @@ const seed = () => {
       { id: "transport", name: "Véhicules", approval: true },
     ],
     resources: [
-      { id: 1, name: "MacBook Pro 14″", code: "MDS-PC-001", type: "physical", cat: "it", icon: "laptop", status: "available", location: "Accueil · Bâtiment A" },
-      { id: 2, name: "Canon EOS R50", code: "MDS-CAM-002", type: "physical", cat: "av", icon: "camera", status: "available", location: "Studio · Bâtiment B" },
-      { id: 3, name: "Meta Quest 3", code: "MDS-VR-003", type: "physical", cat: "vr", icon: "vr", status: "available", location: "Lab immersif" },
+      { id: 1, name: "MacBook Pro 14″", code: "MDS-PC-001", type: "physical", cat: "it", icon: "laptop", qty: 4, status: "available", location: "Accueil · Bâtiment A" },
+      { id: 2, name: "Canon EOS R50", code: "MDS-CAM-002", type: "physical", cat: "av", icon: "camera", qty: 3, status: "available", location: "Studio · Bâtiment B" },
+      { id: 3, name: "Meta Quest 3", code: "MDS-VR-003", type: "physical", cat: "vr", icon: "vr", qty: 2, status: "available", location: "Lab immersif" },
       { id: 4, name: "Salle 204 — Créativité", code: "MDS-SAL-204", type: "room", cat: "spaces", icon: "room", status: "available", location: "Bâtiment A · 24 places" },
-      { id: 5, name: "Adobe Creative Cloud", code: "MDS-LIC-005", type: "license", cat: "soft", icon: "code", status: "available", location: "Licence nominative · 1 poste" },
+      { id: 5, name: "Adobe Creative Cloud", code: "MDS-LIC-005", type: "license", cat: "soft", icon: "code", qty: 10, status: "available", location: "Licences nominatives" },
       { id: 6, name: "Clé du studio photo", code: "MDS-CLE-006", type: "key", cat: "access", icon: "key", status: "available", location: "Accueil · Bâtiment B" },
       { id: 7, name: "Amphithéâtre des Alpes", code: "MDS-AMP-001", type: "amphi", cat: "spaces", icon: "room", status: "available", location: "Rez-de-chaussée · 120 places" },
       { id: 8, name: "Renault Kangoo", code: "MDS-VEH-001", type: "vehicle", cat: "transport", icon: "car", status: "available", location: "Parking du campus · 5 places" },
-      { id: 9, name: "Dell Latitude 5440", code: "MDS-PC-009", type: "physical", cat: "it", icon: "laptop", status: "maintenance", location: "Service informatique" },
-      { id: 10, name: "Kit câbles & adaptateurs", code: "MDS-ACC-010", type: "physical", cat: "it", icon: "box", status: "available", location: "Accueil · Bâtiment A" },
+      { id: 9, name: "Dell Latitude 5440", code: "MDS-PC-009", type: "physical", cat: "it", icon: "laptop", qty: 2, status: "maintenance", location: "Service informatique" },
+      { id: 10, name: "Kit câbles & adaptateurs", code: "MDS-ACC-010", type: "physical", cat: "it", icon: "box", qty: 6, status: "available", location: "Accueil · Bâtiment A" },
       { id: 11, name: "Salle 101 — Projet", code: "MDS-SAL-101", type: "room", cat: "spaces", icon: "room", status: "available", location: "Bâtiment A · 12 places" },
       { id: 12, name: "Studio photo", code: "MDS-STU-001", type: "room", cat: "av", icon: "camera", status: "available", location: "Bâtiment B · fond cyclo" },
       { id: 13, name: "Salle 108 — Mac", code: "MDS-SAL-108", type: "room", cat: "spaces", icon: "laptop", status: "available", location: "Bâtiment A · 20 postes" },
-      { id: 14, name: "Micro Rode Wireless GO", code: "MDS-AUD-014", type: "physical", cat: "av", icon: "box", status: "available", location: "Studio · Bâtiment B" },
-      { id: 15, name: "Trépied Manfrotto", code: "MDS-AV-015", type: "physical", cat: "av", icon: "camera", status: "available", location: "Studio · Bâtiment B" },
+      { id: 14, name: "Micro Rode Wireless GO", code: "MDS-AUD-014", type: "physical", cat: "av", icon: "box", qty: 2, status: "available", location: "Studio · Bâtiment B" },
+      { id: 15, name: "Trépied Manfrotto", code: "MDS-AV-015", type: "physical", cat: "av", icon: "camera", qty: 3, status: "available", location: "Studio · Bâtiment B" },
     ],
     requests: [
       { id: 1023, ids: [6], user: "other", name: "Léa Fontaine", group: "B3 Création digitale", kind: "loan", start: stamp(0, 8.5), end: stamp(0, 18), status: "approved", purpose: "Shooting au studio", created: stamp(-1) },
       { id: 1024, ids: [5], user: "other", name: "Nina Rossi", group: "M1 Expert digital", kind: "loan", start: stamp(-10), end: stamp(20, 18), status: "approved", purpose: "Projet de mémoire", created: stamp(-11) },
-      { id: 1025, ids: [15, 10], user: "other", name: "Inès Moreau", group: "B2 Création digitale", kind: "loan", start: stamp(-2), end: stamp(0, 18), status: "approved", purpose: "Tournage court-métrage", created: stamp(-3) },
+      { id: 1025, ids: [15, 10], qty: { 10: 2 }, user: "other", name: "Inès Moreau", group: "B2 Création digitale", kind: "loan", start: stamp(-2), end: stamp(0, 18), status: "approved", purpose: "Tournage court-métrage", created: stamp(-3) },
       { id: 1026, ids: [14], user: "other", name: "Hugo Bernard", group: "B1 Web", kind: "loan", start: stamp(workday(1), 9), end: stamp(workday(2), 18), status: "approved", purpose: "Interview podcast", created: stamp(-1) },
+      { id: 1027, ids: [3], user: "other", name: "Thomas Girard", group: "B3 Développement web", kind: "loan", start: stamp(-1, 10), end: stamp(3, 18), status: "approved", purpose: "Prototype VR", created: stamp(-2) },
+      { id: 1028, ids: [1], user: "other", name: "Thomas Girard", group: "B3 Développement web", kind: "loan", start: stamp(-1, 10), end: stamp(1, 18), status: "approved", purpose: "Hackathon", created: stamp(-2) },
       { id: 1001, ids: [1], user: "student", name: "Alex Martin", kind: "loan", start: stamp(-3), end: stamp(2, 18), status: "approved", purpose: "Projet de fin de semestre", created: stamp(-3) },
-      { id: 1002, ids: [2], user: "professor", name: "Camille Laurent", kind: "loan", start: stamp(1), end: stamp(3, 18), status: "pending", group: "B2 Création digitale", purpose: "Atelier photo", created: stamp(-1) },
+      { id: 1002, ids: [2], qty: { 2: 2 }, user: "professor", name: "Camille Laurent", kind: "loan", start: stamp(1), end: stamp(3, 18), status: "pending", group: "B2 Création digitale", purpose: "Atelier photo", created: stamp(-1) },
       { id: 1004, ids: [3], user: "professor", name: "Camille Laurent", kind: "loan", start: stamp(-5), end: stamp(-1, 18), status: "approved", purpose: "Atelier immersif", created: stamp(-5) },
       booking(1003, 4, "student", "Alex Martin", 1, 14, 16, { purpose: "Travail en groupe" }),
       booking(1005, 7, "professor", "Camille Laurent", 0, 9, 12, { purpose: "Conférence UX", group: "B3 Développement web" }),
@@ -202,6 +204,8 @@ const users = {
 const labels = {
   available: "Disponible",
   borrowed: "Emprunté",
+  out: "Plus en stock",
+  occupied: "Occupé",
   reserved: "Réservé",
   maintenance: "En maintenance",
   unavailable: "Indisponible",
@@ -226,7 +230,7 @@ let role = "student",
   statusFilter = "",
   reqFilter = "all",
   trackFilter = "all",
-  cart = [],
+  cart = {},
   planView = mobile.matches ? "day" : "week",
   planDate = dayStart(new Date()),
   planHidden = [],
@@ -249,19 +253,28 @@ const reqStatus = (r) => {
   if (new Date(r.start) > now) return "approved";
   return r.kind === "booking" && new Date(r.end) < now ? "finished" : "active";
 };
+/* Stock : chaque ressource a une quantité (1 pour une salle ou un véhicule).
+   Une demande réserve 1 unité par ressource, sauf précision dans r.qty. */
+const stock = (r) => Math.max(0, r?.qty ?? 1);
+const usable = (r) => (r.status === "available" && !r.retired ? Math.max(0, stock(r) - (r.maint || 0)) : 0);
+const units = (q, id) => q.qty?.[id] ?? 1;
+const holding = (r) =>
+  db.requests.filter((q) => q.ids.includes(r.id) && q.status === "approved" && ["active", "late"].includes(reqStatus(q)));
+const outNow = (r) => holding(r).reduce((n, q) => n + units(q, r.id), 0);
+const availNow = (r) => Math.max(0, usable(r) - outNow(r));
 const resStatus = (r) => {
   if (r.status !== "available") return r.status;
-  const now = new Date();
-  const open = db.requests.filter((q) => q.ids.includes(r.id));
-  if (open.some((q) => q.status === "approved" && new Date(q.start) <= now && (q.kind === "loan" || new Date(q.end) > now)))
-    return "borrowed";
-  if (open.some((q) => ["pending", "approved"].includes(q.status) && new Date(q.end) > now && new Date(q.start) <= addDays(now, 1)))
-    return "reserved";
-  return "available";
+  if (reserve(r.type)) return outNow(r) ? "occupied" : "available";
+  if (availNow(r) > 0) return "available";
+  return (r.maint || 0) >= stock(r) ? "maintenance" : "out";
 };
+// Nom avec quantité, ex. « Kit câbles × 2 ».
+const itemName = (q, id) => `${esc(resource(id)?.name)}${units(q, id) > 1 ? ` × ${units(q, id)}` : ""}`;
 const badge = (s) => `<span class="badge s-${s}">${labels[s] || s}</span>`;
 const mine = () => db.requests.filter((r) => role === "admin" || r.user === role);
 const visible = (r) => role === "admin" || r.user === role;
+const cartIds = () => Object.keys(cart).map(Number);
+const cartCount = () => Object.values(cart).reduce((n, v) => n + v, 0);
 const firstName = () => users[role].name.split(" ")[0];
 
 function persist(text) {
@@ -388,7 +401,7 @@ function renderChrome() {
       <label class="demo"><span>Mode démo</span><select id="role" aria-label="Changer de profil de démonstration">${Object.entries(users)
         .map(([k, x]) => `<option value="${k}" ${role === k ? "selected" : ""}>${x.label}</option>`)
         .join("")}</select></label>
-      <button class="icon-btn cart-btn" data-action="cart" aria-label="Ma sélection de matériel (${cart.length})">${ico("bag")}${cart.length ? `<i>${cart.length}</i>` : ""}</button>
+      <button class="icon-btn cart-btn" data-action="cart" aria-label="Ma sélection de matériel (${cartCount()})">${ico("bag")}${cartCount() ? `<i>${cartCount()}</i>` : ""}</button>
     </div>`;
   placeIndicator();
   bindChrome();
@@ -398,7 +411,7 @@ function bindChrome() {
   $("#topbar [data-action=cart]").onclick = openCart;
   $("#role").onchange = (e) => {
     role = e.target.value;
-    cart = [];
+    cart = {};
     prevIndicator = null;
     lastView = null;
     render();
@@ -550,13 +563,13 @@ const views = {
         manage ? "Ajoutez, modifiez ou retirez les ressources proposées." : "Le matériel s’emprunte, les salles et véhicules se réservent.",
         manage
           ? `<button class="btn primary" data-action="add-resource">${ico("plus")} Ajouter une ressource</button>`
-          : `<button class="btn ${cart.length ? "primary" : ""}" data-action="cart">${ico("bag")} Ma sélection${cart.length ? ` · ${cart.length}` : ""}</button>`,
+          : `<button class="btn ${cartCount() ? "primary" : ""}" data-action="cart">${ico("bag")} Ma sélection${cartCount() ? ` · ${cartCount()}` : ""}</button>`,
       ) +
       `<div class="toolbar">
         ${segmented("filter", filter, [["all", "Tout"], ["loan", "À emprunter"], ["booking", "À réserver"]])}
         <label class="search">${ico("search")}<input id="search" type="search" placeholder="Rechercher par nom ou référence" value="${esc(query)}"></label>
         <select id="category" aria-label="Catégorie"><option value="">Toutes les catégories</option>${db.categories.map((c) => `<option value="${c.id}" ${category === c.id ? "selected" : ""}>${esc(c.name)}</option>`).join("")}</select>
-        <select id="status-filter" aria-label="Disponibilité"><option value="">Tous les états</option>${["available", "borrowed", "reserved", "maintenance", "unavailable"].map((s) => `<option value="${s}" ${s === statusFilter ? "selected" : ""}>${labels[s]}</option>`).join("")}</select>
+        <select id="status-filter" aria-label="Disponibilité"><option value="">Tous les états</option>${["available", "out", "occupied", "maintenance", "unavailable"].map((s) => `<option value="${s}" ${s === statusFilter ? "selected" : ""}>${labels[s]}</option>`).join("")}</select>
       </div>
       <div id="catalog-results">${catalogCards()}</div>`
     );
@@ -596,7 +609,7 @@ const views = {
             .map(
               (r) => `<article class="approval">
               <div class="approval-who"><span class="avatar">${esc(r.name.split(" ").map((w) => w[0]).join("").slice(0, 2))}</span><div><b>${esc(r.name)}</b><small>${esc(r.group || (users[r.user]?.label ?? "Externe"))} · demandé le ${fmt(r.created)}</small></div></div>
-              <div class="approval-what">${r.ids.map((id) => `<span class="pill-res">${ico(resource(id)?.icon)}${esc(resource(id)?.name)}</span>`).join("")}</div>
+              <div class="approval-what">${r.ids.map((id) => `<span class="pill-res">${ico(resource(id)?.icon)}${itemName(r, id)}</span>`).join("")}</div>
               <p class="approval-when">${ico("calendar")} ${dateRange(r)}</p>
               ${r.purpose ? `<p class="approval-why">« ${esc(r.purpose)} »</p>` : ""}
               <div class="approval-actions"><button class="btn" data-reject="${r.id}">Refuser</button><button class="btn primary" data-approve="${r.id}">${ico("check")} Valider</button></div>
@@ -699,7 +712,7 @@ function upcomingRow(r) {
       : `${relDay(r.start)[0].toUpperCase() + relDay(r.start).slice(1)} · ${hhmm(r.start)} – ${hhmm(r.end)}`;
   return `<button class="up-row" data-detail="${r.id}" style="--c:${r.kind === "booking" ? colorOf(res?.id) : "var(--purple)"}">
     <span class="res-icon">${ico(res?.icon)}</span>
-    <span class="up-main"><b>${esc(res?.name)}${r.ids.length > 1 ? ` + ${r.ids.length - 1}` : ""}</b><small>${when}</small></span>
+    <span class="up-main"><b>${itemName(r, r.ids[0])}${r.ids.length > 1 ? ` + ${r.ids.length - 1}` : ""}</b><small>${when}</small></span>
     ${badge(s)}${ico("chevR", "chev")}
   </button>`;
 }
@@ -739,7 +752,7 @@ function trackingData() {
 function trackingBody() {
   const now = new Date();
   const d = trackingData();
-  const count = (list) => list.reduce((n, r) => n + r.ids.length, 0);
+  const count = (list) => list.reduce((n, r) => n + r.ids.reduce((m, id) => m + units(r, id), 0), 0);
   const outCount = count(d.out) + count(d.late);
   const dueToday = d.out.filter((r) => sameDay(r.end, now)).length;
   const plural = (n, word) => `${word}${n > 1 ? "s" : ""}`;
@@ -796,7 +809,7 @@ function trackRow(r, kind) {
   return `<div class="track-row">
     <button class="track-what" data-detail="${r.id}">
       <span class="res-icon" style="--c:${r.kind === "booking" ? colorOf(res[0]?.id) : kind === "late" ? "var(--pink)" : "var(--purple)"}">${ico(res[0]?.icon)}</span>
-      <span><b>${res.map((x) => esc(x.name)).join(", ")}</b><small>${res.map((x) => esc(x.code)).join(" · ")}</small></span>
+      <span><b>${r.ids.map((id) => itemName(r, id)).join(", ")}</b><small>${res.map((x) => esc(x.code)).join(" · ")}</small></span>
     </button>
     <div class="track-who"><span class="avatar sm">${initials(r.name)}</span><span><b>${esc(r.name)}</b><small>${esc(r.group || users[r.user]?.label || "")}</small></span></div>
     <div class="track-when">${when}${meter}</div>
@@ -844,7 +857,7 @@ function requestList(list, showUser = false, emptyText = "Aucune demande pour le
       const res = resource(r.ids[0]);
       return `<button class="req-row" data-detail="${r.id}">
         <span class="res-icon">${ico(res?.icon)}</span>
-        <span class="req-main"><b>${esc(res?.name)}${r.ids.length > 1 ? ` + ${r.ids.length - 1}` : ""}</b><small>${r.kind === "loan" ? "Emprunt" : "Réservation"} · n° ${r.id}</small></span>
+        <span class="req-main"><b>${itemName(r, r.ids[0])}${r.ids.length > 1 ? ` + ${r.ids.length - 1}` : ""}</b><small>${r.kind === "loan" ? "Emprunt" : "Réservation"} · n° ${r.id}</small></span>
         ${showUser ? `<span class="req-user">${esc(r.name)}<small>${esc(r.group || users[r.user]?.label || "")}</small></span>` : ""}
         <span class="req-date">${dateRange(r)}</span>
         ${badge(reqStatus(r))}
@@ -854,12 +867,31 @@ function requestList(list, showUser = false, emptyText = "Aucune demande pour le
     .join("")}</div>`;
 }
 
+// Stock restant : une pastille par unité (au-delà de 12, une simple jauge).
+function stockLine(r, free, note = "") {
+  const total = stock(r),
+    maint = Math.min(total, r.maint || 0),
+    used = Math.max(0, total - maint - free);
+  const marks =
+    total <= 12
+      ? `<span class="dots" aria-hidden="true">${"<i class='f'></i>".repeat(free)}${"<i class='u'></i>".repeat(used)}${"<i class='m'></i>".repeat(maint)}</span>`
+      : `<span class="stock-bar" aria-hidden="true"><i style="width:${(free / total) * 100}%"></i></span>`;
+  return `<div class="stock ${free ? "" : "none"}">${marks}<span><b>${free}</b> sur ${total} disponible${free > 1 ? "s" : ""}${maint ? ` · ${maint} en réparation` : ""}${note ? `<small>${note}</small>` : ""}</span></div>`;
+}
 // Pour le gestionnaire : qui a la ressource en ce moment.
 function holderLine(res) {
-  const q = db.requests.find((x) => x.ids.includes(res.id) && x.status === "approved" && ["active", "late"].includes(reqStatus(x)));
-  if (!q) return "";
-  const late = reqStatus(q) === "late";
-  return `<button class="rc-holder ${late ? "late" : ""}" data-detail="${q.id}"><span class="avatar xs">${initials(q.name)}</span><span>${q.kind === "loan" ? "Chez" : "Occupé par"} <b>${esc(q.name)}</b> · ${late ? "en retard" : q.kind === "loan" ? `retour ${relDay(q.end)}` : `jusqu’à ${hhmm(q.end)}`}</span></button>`;
+  const list = holding(res).sort((a, b) => a.end.localeCompare(b.end));
+  if (!list.length) return "";
+  const late = list.some((q) => reqStatus(q) === "late");
+  const q = list[0];
+  const names =
+    list.length === 1
+      ? `<b>${esc(q.name)}</b>${units(q, res.id) > 1 ? ` (${units(q, res.id)})` : ""} · ${late ? "en retard" : q.kind === "loan" ? `retour ${relDay(q.end)}` : `jusqu’à ${hhmm(q.end)}`}`
+      : `<b>${esc(list[0].name)}</b>, <b>${esc(list[1].name)}</b>${list.length > 2 ? ` +${list.length - 2}` : ""}${late ? " · un retard" : ""}`;
+  return `<button class="rc-holder ${late ? "late" : ""}" data-detail="${q.id}"><span class="avatars">${list
+    .slice(0, 3)
+    .map((x) => `<span class="avatar xs">${initials(x.name)}</span>`)
+    .join("")}</span><span>${q.kind === "loan" ? "Chez" : "Occupé par"} ${names}</span></button>`;
 }
 function catalogCards() {
   const manage = view === "manage";
@@ -876,19 +908,29 @@ function catalogCards() {
   return `<p class="count-line">${list.length} ressource${list.length > 1 ? "s" : ""}</p><div class="catalog">${list
     .map((r) => {
       const book = reserve(r.type),
-        added = cart.includes(r.id),
+        added = !!cart[r.id],
         s = resStatus(r),
-        blocked = r.status !== "available",
+        free = availNow(r),
+        // Grisé : matériel dont tout le stock est sorti, ou ressource hors service.
+        out = r.status !== "available" || (!book && free <= 0),
         c = cat(r.cat);
+      // Prochain retour attendu (hors retards, dont la date est déjà passée).
+      const nextBack = holding(r)
+        .filter((q) => reqStatus(q) !== "late")
+        .sort((a, b) => a.end.localeCompare(b.end))[0];
+      const backNote = !nextBack ? (holding(r).length ? "Retour en retard" : "") : `Retour prévu ${relDay(nextBack.end)}`;
       const action = manage
         ? `<button class="btn small" data-edit="${r.id}">${ico("edit")} Modifier</button>`
         : book
-          ? `<button class="btn small" data-book="${r.id}" ${blocked ? "disabled" : ""}>${ico("calendar")} Réserver</button>`
-          : `<button class="btn small ${added ? "selected" : ""}" data-add="${r.id}" ${blocked ? "disabled" : ""} aria-pressed="${added}">${ico(added ? "check" : "plus")} ${added ? "Ajouté" : "Ajouter"}</button>`;
-      return `<article class="resource-card ${added ? "is-added" : ""}" style="--c:${book ? colorOf(r.id) : "var(--purple)"}">
-        <div class="rc-top"><span class="res-icon big">${ico(r.icon)}</span>${badge(s)}</div>
+          ? `<button class="btn small" data-book="${r.id}" ${out ? "disabled" : ""}>${ico("calendar")} Réserver</button>`
+          : out
+            ? `<button class="btn small" disabled>${r.status !== "available" ? "Indisponible" : "Plus en stock"}</button>`
+            : `<button class="btn small ${added ? "selected" : ""}" data-add="${r.id}" aria-pressed="${added}">${ico(added ? "check" : "plus")} ${added ? `Ajouté${cart[r.id] > 1 ? ` × ${cart[r.id]}` : ""}` : "Ajouter"}</button>`;
+      return `<article class="resource-card ${added ? "is-added" : ""} ${out ? "is-out" : ""}" style="--c:${book ? colorOf(r.id) : "var(--purple)"}">
+        <div class="rc-top"><span class="res-icon big">${ico(r.icon)}</span>${s === "occupied" ? `<span class="badge s-occupied">Occupé jusqu’à ${hhmm(holding(r)[0].end)}</span>` : badge(s)}</div>
         <h3>${esc(r.name)}</h3>
         <p class="rc-meta">${ico("pin")}${esc(r.location)}</p>
+        ${book ? "" : stockLine(r, free, out && r.status === "available" ? backNote : "")}
         ${role === "admin" ? holderLine(r) : ""}
         <div class="rc-foot"><span class="rc-cat">${esc(c?.name)}${c?.approval ? `<em>Sur validation</em>` : ""}</span>${action}</div>
       </article>`;
@@ -1221,7 +1263,8 @@ function openBooking({ resId, date, hour } = {}) {
     if (!f.date) msg = "Choisissez une date.";
     else if (new Date(start) < new Date()) (msg = "Ce créneau est déjà passé."), (tone = "error");
     else if (new Date(end) <= new Date(start)) (msg = "L’heure de fin doit être après l’heure de début."), (tone = "error");
-    else if (clash) (msg = `Déjà réservé de ${hhmm(clash.start)} à ${hhmm(clash.end)}. Choisissez un autre horaire.`), (tone = "error");
+    else if (clash)
+      (msg = clash.start ? `Déjà réservé de ${hhmm(clash.start)} à ${hhmm(clash.end)}. Choisissez un autre horaire.` : "Cet espace n’est pas disponible."), (tone = "error");
     else if (cat(r.cat)?.approval) (msg = "Créneau libre. Cette réservation sera validée par l’accueil."), (tone = "info");
     else (msg = "Créneau libre. La réservation est confirmée immédiatement."), (tone = "ok");
     note.textContent = msg;
@@ -1284,13 +1327,19 @@ function availStrip(r, date, start, end) {
 
 /* ---------- Sélection de matériel (emprunt) ---------- */
 function openCart() {
-  const items = cart.map(resource).filter(Boolean);
+  const items = cartIds().map(resource).filter(Boolean);
   const needsApproval = items.some((r) => cat(r.cat)?.approval);
   modal(
     "Ma sélection",
     items.length
       ? `<form id="request-form" class="modal-body">
-        <div class="cart-list">${items.map((r) => `<div class="cart-item"><span class="res-icon">${ico(r.icon)}</span><span><b>${esc(r.name)}</b><small>${esc(r.code)}</small></span><button type="button" class="icon-btn ghost" data-remove="${r.id}" aria-label="Retirer ${esc(r.name)}">${ico("close")}</button></div>`).join("")}</div>
+        <div class="cart-list">${items
+          .map(
+            (r) => `<div class="cart-item"><span class="res-icon">${ico(r.icon)}</span><span><b>${esc(r.name)}</b><small>${availNow(r)} disponible${availNow(r) > 1 ? "s" : ""} en ce moment</small></span>
+          ${usable(r) > 1 ? `<span class="stepper"><button type="button" data-step="-1" data-id="${r.id}" aria-label="Un de moins">−</button><output>${cart[r.id]}</output><button type="button" data-step="1" data-id="${r.id}" aria-label="Un de plus" ${cart[r.id] >= availNow(r) ? "disabled" : ""}>+</button></span>` : ""}
+          <button type="button" class="icon-btn ghost" data-remove="${r.id}" aria-label="Retirer ${esc(r.name)}">${ico("close")}</button></div>`,
+          )
+          .join("")}</div>
         <div class="form-row"><label class="field">Retrait<input name="start" type="datetime-local" required value="${stamp(1)}" min="${stamp(0, 0)}"></label><label class="field">Retour<input name="end" type="datetime-local" required value="${stamp(3, 18)}"></label></div>
         ${role === "professor" ? '<label class="field">Groupe ou classe <span class="opt">facultatif</span><input name="group" placeholder="Ex. B2 Création digitale" maxlength="80"></label>' : ""}
         <label class="field">Pour quel projet ?<textarea name="purpose" rows="2" required placeholder="Quelques mots suffisent" maxlength="300"></textarea></label>
@@ -1304,39 +1353,69 @@ function openCart() {
   $$("[data-remove]").forEach(
     (b) =>
       (b.onclick = () => {
-        cart = cart.filter((id) => id !== +b.dataset.remove);
+        delete cart[+b.dataset.remove];
         renderChrome();
         refreshCatalog();
         openCart();
       }),
   );
+  $$("[data-step]").forEach(
+    (b) =>
+      (b.onclick = () => {
+        const id = +b.dataset.id,
+          n = (cart[id] || 1) + +b.dataset.step;
+        if (n < 1) delete cart[id];
+        else cart[id] = Math.min(n, Math.max(1, availNow(resource(id))));
+        const keep = new FormData($("#request-form"));
+        renderChrome();
+        refreshCatalog();
+        openCart();
+        // Les champs déjà remplis survivent au changement de quantité.
+        for (const [k, v] of keep) if ($(`#request-form [name="${k}"]`)) $(`#request-form [name="${k}"]`).value = v;
+        if (!$("#request-form")) return;
+        const out = $(`[data-id="${id}"]`)?.parentElement.querySelector("output");
+        pop(out);
+      }),
+  );
   $("#request-form")?.addEventListener("submit", submitLoan);
 }
 
-function conflict(ids, start, end, exclude) {
-  return db.requests.find(
-    (q) =>
-      q.id !== exclude &&
-      ["approved", "pending"].includes(q.status) &&
-      q.ids.some((id) => ids.includes(id)) &&
-      ((q.kind === "loan" && q.status === "approved" && new Date(q.end) < new Date()) ||
-        (new Date(start) < new Date(q.end) && new Date(end) > new Date(q.start))),
-  );
+// Un emprunt en retard occupe son unité jusqu’à son retour effectif.
+const effEnd = (q) => (q.kind === "loan" && q.status === "approved" && new Date(q.end) < new Date() ? new Date(8.64e15) : new Date(q.end));
+// Renvoie la première ressource dont le stock ne suffit pas sur la période, avec le nombre d’unités libres.
+function conflict(ids, start, end, exclude, need = {}) {
+  const s = new Date(start),
+    e = new Date(end);
+  for (const id of ids) {
+    const r = resource(id);
+    const list = db.requests.filter(
+      (q) => q.id !== exclude && ["approved", "pending"].includes(q.status) && q.ids.includes(id) && s < effEnd(q) && e > new Date(q.start),
+    );
+    const points = [s, ...list.map((q) => new Date(q.start)).filter((d) => d > s && d < e)];
+    const peak = Math.max(0, ...points.map((t) => list.filter((q) => new Date(q.start) <= t && effEnd(q) > t).reduce((n, q) => n + units(q, id), 0)));
+    const free = Math.max(0, usable(r) - peak);
+    if ((need[id] ?? 1) > free) return { ...(list[0] || {}), res: r, free };
+  }
+  return null;
 }
 
 function submitLoan(e) {
   e.preventDefault();
   const data = Object.fromEntries(new FormData(e.target)),
-    ids = [...cart];
+    ids = cartIds(),
+    need = { ...cart };
   let error = "";
   if (!ids.length) error = "Sélectionnez au moins une ressource.";
   else if (new Date(data.start) < new Date()) error = "La date de retrait doit être dans le futur.";
   else if (new Date(data.end) <= new Date(data.start)) error = "Le retour doit être après le retrait.";
-  else if (ids.some((id) => resource(id).status !== "available" || resource(id).retired)) error = "Une ressource n’est plus disponible.";
+  else if (ids.some((id) => usable(resource(id)) < need[id])) error = "Une ressource n’est plus disponible en quantité suffisante.";
   else if (!data.purpose.trim()) error = "Indiquez en quelques mots votre projet.";
   else {
-    const c = conflict(ids, data.start, data.end);
-    if (c) error = `${resource(c.ids.find((id) => ids.includes(id)))?.name} est déjà pris sur cette période. Essayez d’autres dates.`;
+    const c = conflict(ids, data.start, data.end, undefined, need);
+    if (c)
+      error = c.free
+        ? `Il ne reste ${c.free === 1 ? "qu’un seul exemplaire" : `que ${c.free} exemplaires`} de ${c.res.name} sur cette période. Réduisez la quantité ou changez les dates.`
+        : `${c.res.name} n’est plus disponible sur cette période. Essayez d’autres dates.`;
   }
   if (error) {
     const el = $("#form-error");
@@ -1349,6 +1428,7 @@ function submitLoan(e) {
   db.requests.push({
     id: Math.max(1000, ...db.requests.map((r) => r.id)) + 1,
     ids,
+    ...(Object.values(need).some((n) => n > 1) ? { qty: need } : {}),
     user: role,
     name: users[role].name,
     kind: "loan",
@@ -1357,7 +1437,7 @@ function submitLoan(e) {
     purpose: data.purpose.trim(),
     created: new Date().toISOString(),
   });
-  cart = [];
+  cart = {};
   persist(`Nouvelle demande de ${users[role].name} · ${labels[status]}`);
   closeModal();
   navigate("requests");
@@ -1388,7 +1468,7 @@ function detail(id) {
       <div class="cart-list">${r.ids
         .map(
           (rid) =>
-            `<div class="cart-item"><span class="res-icon">${ico(resource(rid)?.icon)}</span><span><b>${esc(resource(rid)?.name)}</b><small>${esc(resource(rid)?.location)}</small></span>${r.conditions ? badge(r.conditions[rid] === "RAS" ? "returned" : r.conditions[rid] === "Endommagé" ? "maintenance" : "unavailable") : ""}</div>`,
+            `<div class="cart-item"><span class="res-icon">${ico(resource(rid)?.icon)}</span><span><b>${itemName(r, rid)}</b><small>${esc(resource(rid)?.location)}</small></span>${r.conditions ? badge(r.conditions[rid] === "RAS" ? "returned" : r.conditions[rid] === "Endommagé" ? "maintenance" : "unavailable") : ""}</div>`,
         )
         .join("")}</div>
       <dl class="facts">
@@ -1418,7 +1498,7 @@ function detail(id) {
 
 function approve(r) {
   if (role !== "admin") return;
-  if (conflict(r.ids, r.start, r.end, r.id) || r.ids.some((id) => resource(id).status !== "available" || resource(id).retired))
+  if (conflict(r.ids, r.start, r.end, r.id, r.qty || {}))
     return toast("Impossible de valider : une ressource n’est plus disponible.", "warn");
   if (new Date(r.end) <= new Date()) return toast("Cette demande a expiré. Refusez-la pour libérer le créneau.", "warn");
   r.status = "approved";
@@ -1460,19 +1540,26 @@ function returnForm(r) {
     "Contrôler le retour",
     `<form id="return-form" class="modal-body"><p class="muted">Indiquez l’état de chaque ressource.</p>${r.ids
       .map(
-        (id) => `<fieldset class="condition"><legend>${esc(resource(id).name)}</legend>${["RAS", "Endommagé", "Perdu"]
+        (id) => `<fieldset class="condition"><legend>${itemName(r, id)}</legend>${["RAS", "Endommagé", "Perdu"]
           .map((s, i) => `<label><input type="radio" name="${id}" value="${s}" required ${i === 0 ? "checked" : ""}><span>${s === "RAS" ? "Bon état" : s}</span></label>`)
           .join("")}</fieldset>`,
       )
-      .join("")}<p class="hint">Endommagé : la ressource passe en maintenance. Perdu : elle devient indisponible.</p></form>`,
+      .join("")}<p class="hint">Endommagé : les unités passent en réparation. Perdu : elles sont retirées du stock.</p></form>`,
     `<button class="btn" data-close>Annuler</button><button class="btn primary" form="return-form">Confirmer le retour</button>`,
   );
   $("#return-form").onsubmit = (e) => {
     e.preventDefault();
     if (role !== "admin") return;
     r.conditions = Object.fromEntries(new FormData(e.target));
-    for (const [id, state] of Object.entries(r.conditions))
-      resource(+id).status = state === "RAS" ? "available" : state === "Endommagé" ? "maintenance" : "unavailable";
+    for (const [id, state] of Object.entries(r.conditions)) {
+      const res = resource(+id),
+        n = units(r, +id);
+      if (state === "RAS") continue;
+      // Ressource unique : elle change d’état. Sinon seules les unités concernées sortent du stock.
+      if (stock(res) <= 1) res.status = state === "Endommagé" ? "maintenance" : "unavailable";
+      else if (state === "Endommagé") res.maint = Math.min(stock(res), (res.maint || 0) + n);
+      else res.qty = Math.max(0, stock(res) - n);
+    }
     r.status = "returned";
     r.returnAt = new Date().toISOString();
     r.returnBy = users[role].name;
@@ -1497,15 +1584,34 @@ function editResource(id) {
       <label class="field">Type<select name="type" ${id ? "disabled" : ""}>${Object.entries(types).map(([k, t]) => `<option value="${k}" ${r.type === k ? "selected" : ""}>${t}</option>`).join("")}</select></label></div>
       <label class="field">Catégorie<select name="cat">${db.categories.map((c) => `<option value="${c.id}" ${r.cat === c.id ? "selected" : ""}>${esc(c.name)}</option>`).join("")}</select></label>
       <label class="field">Emplacement<input name="location" value="${esc(r.location)}" required maxlength="120" placeholder="Ex. Bâtiment A · 24 places"></label>
+      <div class="form-row stock-fields"><label class="field">Quantité en stock<input name="qty" type="number" min="1" max="999" value="${stock(r) || 1}" required></label>
+      <label class="field">Dont en réparation<input name="maint" type="number" min="0" max="999" value="${r.maint || 0}"></label></div>
       <label class="field">État<select name="status" ${busy ? "disabled" : ""}>${["available", "maintenance", "unavailable"].map((s) => `<option value="${s}" ${r.status === s ? "selected" : ""}>${labels[s]}</option>`).join("")}</select></label>
       ${busy ? '<p class="form-note info">Une demande est en cours sur cette ressource : son état et son retrait sont bloqués jusqu’à sa clôture.</p>' : ""}
       <p id="resource-error" hidden class="form-note error"></p>
     </form>`,
     `${id ? `<button type="button" class="btn danger-text" id="retire" ${busy ? "disabled" : ""}>Retirer du catalogue</button>` : ""}<button class="btn" data-close>Annuler</button><button class="btn primary" form="resource-form">Enregistrer</button>`,
   );
+  // Une salle ou un véhicule est unique : pas de quantité à saisir.
+  const syncStock = () => ($(".stock-fields").hidden = reserve(id ? r.type : $("#resource-form [name=type]").value));
+  syncStock();
+  $("#resource-form [name=type]").onchange = syncStock;
   $("#resource-form").onsubmit = (e) => {
     e.preventDefault();
     const values = Object.fromEntries(new FormData(e.target));
+    const type = id ? r.type : values.type;
+    if (reserve(type)) {
+      values.qty = 1;
+      values.maint = 0;
+    } else {
+      values.qty = Math.max(1, parseInt(values.qty, 10) || 1);
+      values.maint = Math.min(values.qty, Math.max(0, parseInt(values.maint, 10) || 0));
+    }
+    if (id && values.qty - values.maint < outNow(r)) {
+      $("#resource-error").hidden = false;
+      $("#resource-error").textContent = `${outNow(r)} unité(s) sont actuellement sorties : le stock utilisable ne peut pas être inférieur.`;
+      return;
+    }
     if (db.resources.some((x) => x.id !== id && x.code.toLowerCase() === values.code.trim().toLowerCase())) {
       $("#resource-error").hidden = false;
       $("#resource-error").textContent = "Cette référence est déjà utilisée.";
@@ -1674,8 +1780,9 @@ function bindCards() {
     (b) =>
       (b.onclick = () => {
         const r = resource(+b.dataset.add);
-        const added = cart.includes(r.id);
-        cart = added ? cart.filter((id) => id !== r.id) : [...cart, r.id];
+        const added = !!cart[r.id];
+        if (added) delete cart[r.id];
+        else cart[r.id] = 1;
         b.classList.toggle("selected", !added);
         b.setAttribute("aria-pressed", !added);
         b.innerHTML = `${ico(added ? "plus" : "check")} ${added ? "Ajouter" : "Ajouté"}`;
@@ -1684,8 +1791,8 @@ function bindCards() {
         // Le bouton de sélection dans l’en-tête de page suit le compteur.
         const pageCart = $(".page-actions [data-action=cart]");
         if (pageCart) {
-          pageCart.innerHTML = `${ico("bag")} Ma sélection${cart.length ? ` · ${cart.length}` : ""}`;
-          pageCart.classList.toggle("primary", cart.length > 0);
+          pageCart.innerHTML = `${ico("bag")} Ma sélection${cartCount() ? ` · ${cartCount()}` : ""}`;
+          pageCart.classList.toggle("primary", cartCount() > 0);
         }
         pop($(".cart-btn i"));
         pop(b);
@@ -1726,7 +1833,7 @@ if (document.modelContext?.registerTool) {
             !input ||
             !Array.isArray(input.ids) ||
             !input.ids.length ||
-            input.ids.some((id) => !Number.isInteger(id) || !resource(id) || resource(id).retired || resource(id).status !== "available")
+            input.ids.some((id) => !Number.isInteger(id) || !resource(id) || usable(resource(id)) < 1)
           )
             throw Error("Ressources invalides");
           const kinds = new Set(input.ids.map((id) => (reserve(resource(id).type) ? "booking" : "loan")));
@@ -1737,10 +1844,10 @@ if (document.modelContext?.registerTool) {
             openBooking({ resId: input.ids[0] });
             return { staged: input.ids, kind, submitted: false };
           }
-          cart = [...new Set(input.ids)];
+          cart = Object.fromEntries([...new Set(input.ids)].map((id) => [id, 1]));
           render();
           openCart();
-          return { staged: cart, kind, submitted: false };
+          return { staged: cartIds(), kind, submitted: false };
         },
       }),
     ).catch(() => {});
