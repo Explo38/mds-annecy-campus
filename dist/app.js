@@ -323,25 +323,43 @@ function toast(text, tone = "ok") {
 }
 
 /* ---------- Fenêtre modale ---------- */
-let closeTimer;
+let closeTimer, opener;
+// Souris ou clavier ? Le focus rendu après une modale n’affiche son contour qu’au clavier.
+let keyboardNav = false;
+addEventListener("keydown", (e) => e.key === "Tab" && (keyboardNav = true), true);
+addEventListener("pointerdown", () => (keyboardNav = false), true);
+function restoreFocus() {
+  const el = opener?.isConnected ? opener : null;
+  opener = null;
+  // Au clavier, on revient sur l’élément d’origine ; à la souris, on retire simplement le focus.
+  if (el && keyboardNav) el.focus({ preventScroll: true });
+  else document.activeElement?.blur?.();
+}
 function modal(title, body, actions = "", size = "") {
   const d = $("#modal");
   clearTimeout(closeTimer);
   d.classList.remove("closing");
   d.className = size;
   d.innerHTML = `<div class="modal-inner"><div class="modal-head"><h2>${title}</h2><button class="icon-btn ghost" data-close aria-label="Fermer">${ico("close")}</button></div>${body}${actions ? `<div class="modal-actions">${actions}</div>` : ""}</div>`;
-  if (!d.open) d.showModal();
+  if (!d.open) {
+    opener = document.activeElement;
+    d.showModal();
+  }
   else reveal([$(".modal-inner", d)], { y: 6, duration: 260 });
   $$("[data-close]", d).forEach((b) => (b.onclick = closeModal));
 }
 function closeModal() {
   const d = $("#modal");
   if (!d.open) return;
-  if (!motionOK) return d.close();
+  if (!motionOK) {
+    d.close();
+    return restoreFocus();
+  }
   d.classList.add("closing");
   closeTimer = setTimeout(() => {
     d.classList.remove("closing");
     d.close();
+    restoreFocus();
   }, 180);
 }
 $("#modal").addEventListener("cancel", (e) => {
@@ -1062,7 +1080,7 @@ function weekView() {
           ? `<div class="now" style="top:${(hourOf(now) - H0) * HOUR}px"></div>`
           : "";
       return `<div class="day-col ${day.getDay() % 6 === 0 ? "weekend" : ""} ${sameDay(day, now) ? "today" : ""} ${day < dayStart(now) ? "past" : ""}" data-day="${localISO(day)}" style="height:${(H1 - H0) * HOUR}px">
-        <div class="ghost" aria-hidden="true"></div>
+        <div class="slot-ghost" aria-hidden="true"></div>
         ${long
           .map((g, i) => {
             const top = (hourOf(g.s) - H0) * HOUR,
@@ -1142,7 +1160,7 @@ function dayTimeline(day, compact = false) {
           .join("");
         return `<div class="tl-row" style="--c:${colorOf(x.id)}">
           <div class="tl-name"><i></i><span><b>${esc(x.name.split(" — ")[0])}</b><small>${esc(x.location.split(" · ").pop())}</small></span></div>
-          <div class="tl-track ${x.status !== "available" ? "blocked" : ""}" data-track="${x.id}" data-day="${localISO(day)}"><div class="ghost" aria-hidden="true"></div>${bars}${nowLine}</div>
+          <div class="tl-track ${x.status !== "available" ? "blocked" : ""}" data-track="${x.id}" data-day="${localISO(day)}"><div class="slot-ghost" aria-hidden="true"></div>${bars}${nowLine}</div>
         </div>`;
       })
       .join("")}
@@ -1212,7 +1230,7 @@ function bindPlan() {
 function bindSlots(root = document) {
   const snap = (h) => Math.min(H1 - 1, Math.max(H0, Math.floor(h * 2) / 2));
   $$(".day-col", root).forEach((col) => {
-    const ghost = $(".ghost", col);
+    const ghost = $(".slot-ghost", col);
     const hourAt = (e) => snap(H0 + (e.clientY - col.getBoundingClientRect().top) / HOUR);
     col.onmousemove = (e) => {
       if (e.target.closest(".ev") || col.classList.contains("past")) return (ghost.style.opacity = 0);
@@ -1227,7 +1245,7 @@ function bindSlots(root = document) {
     };
   });
   $$(".tl-track", root).forEach((t) => {
-    const ghost = $(".ghost", t);
+    const ghost = $(".slot-ghost", t);
     const hourAt = (e) => {
       const b = t.getBoundingClientRect();
       return snap(H0 + ((e.clientX - b.left) / b.width) * (H1 - H0));

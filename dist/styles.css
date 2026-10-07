@@ -428,6 +428,11 @@ main {
   padding: 16px 40px 64px;
   outline: none;
 }
+/* Le conteneur principal reçoit le focus par programme : jamais de contour. */
+main:focus,
+main:focus-visible {
+  outline: none;
+}
 .page-head {
   display: flex;
   align-items: flex-end;
@@ -1655,7 +1660,7 @@ main > .panel.flush + .panel {
   cursor: default;
   background-color: var(--bg);
 }
-.ghost {
+.slot-ghost {
   position: absolute;
   left: 3px;
   right: 3px;
@@ -1860,7 +1865,7 @@ main > .panel.flush + .panel {
   cursor: not-allowed;
   background-color: var(--bg);
 }
-.tl-track .ghost {
+.tl-track .slot-ghost {
   top: 8px;
   bottom: 8px;
   left: 0;
