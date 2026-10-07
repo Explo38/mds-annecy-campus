@@ -48,7 +48,7 @@ Les pastilles permettent de masquer ou d’afficher un espace. Les créneaux en 
 
 Chaque ressource a une quantité en stock (une salle ou un véhicule compte pour 1).
 
-- Le catalogue affiche le stock restant (« 2 sur 4 disponibles ») avec une pastille par exemplaire.
+- Chaque carte affiche une barre de progression : le stock restant pour le matériel (« 2 sur 4 disponibles », exemplaires en réparation hachurés), les heures encore libres aujourd’hui pour les salles et véhicules.
 - Quand tout le stock est sorti, la carte est grisée, le bouton passe à « Plus en stock » et la date du prochain retour est indiquée.
 - Dans « Ma sélection », on choisit le nombre d’exemplaires ; la demande est refusée si le stock ne suffit pas sur la période (les demandes en attente et les retards comptent).
 - Au retour, un exemplaire endommagé part en réparation et un exemplaire perdu est retiré du stock ; le gestionnaire ajuste la quantité et le nombre en réparation dans **Ressources**.

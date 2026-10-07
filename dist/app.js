@@ -867,16 +867,36 @@ function requestList(list, showUser = false, emptyText = "Aucune demande pour le
     .join("")}</div>`;
 }
 
-// Stock restant : une pastille par unité (au-delà de 12, une simple jauge).
+// Stock restant : texte au-dessus, barre pleine largeur (libres · sortis · en réparation).
 function stockLine(r, free, note = "") {
-  const total = stock(r),
+  const total = stock(r) || 1,
     maint = Math.min(total, r.maint || 0),
-    used = Math.max(0, total - maint - free);
-  const marks =
-    total <= 8
-      ? `<span class="dots" aria-hidden="true">${"<i class='f'></i>".repeat(free)}${"<i class='u'></i>".repeat(used)}${"<i class='m'></i>".repeat(maint)}</span>`
-      : `<span class="stock-bar" aria-hidden="true"><i style="width:${(free / total) * 100}%"></i></span>`;
-  return `<div class="stock ${free ? "" : "none"}">${marks}<span><b>${free}</b> sur ${total} disponible${free > 1 ? "s" : ""}${maint ? ` · ${maint} en réparation` : ""}${note ? `<small>${note}</small>` : ""}</span></div>`;
+    used = Math.max(0, total - maint - free),
+    pct = (n) => (n / total) * 100;
+  return `<div class="stock ${free ? "" : "none"}">
+    <div class="stock-text"><span><b>${free}</b> sur ${stock(r)} disponible${free > 1 ? "s" : ""}</span>${maint ? `<span class="stock-maint">${maint} en réparation</span>` : ""}</div>
+    <div class="stock-bar" role="img" aria-label="${free} disponibles, ${used} sortis${maint ? `, ${maint} en réparation` : ""}"><i class="f" style="width:${pct(free)}%"></i><i class="u" style="width:${pct(used)}%"></i><i class="m" style="width:${pct(maint)}%"></i></div>
+    ${note ? `<small>${note}</small>` : ""}
+  </div>`;
+}
+// Même gabarit pour les espaces : heures encore libres aujourd’hui (8 h – 20 h).
+function dayLine(r) {
+  const now = new Date(),
+    day = dayStart(now),
+    span = H1 - H0;
+  const segs = db.requests
+    .filter((q) => q.ids.includes(r.id) && ["approved", "pending"].includes(q.status))
+    .map((q) => segment(q, day))
+    .filter(Boolean);
+  const booked = segs.reduce((n, g) => n + (g.e - g.s) / 36e5, 0);
+  const left = Math.max(0, Math.min(span, H1 - Math.max(H0, hourOf(now))));
+  const freeLeft = Math.max(0, left - segs.reduce((n, g) => n + Math.max(0, (g.e - Math.max(g.s, now)) / 36e5), 0));
+  const pct = (h) => (h / span) * 100;
+  const fmtH = (h) => (h % 1 ? `${Math.floor(h)} h 30` : `${h} h`);
+  return `<div class="stock ${freeLeft ? "" : "none"}">
+    <div class="stock-text"><span><b>${fmtH(Math.round(freeLeft * 2) / 2)}</b> libre${freeLeft >= 2 ? "s" : ""} aujourd’hui</span></div>
+    <div class="stock-bar" role="img" aria-label="${fmtH(Math.round(booked * 2) / 2)} réservées aujourd’hui"><i class="f" style="width:${pct(freeLeft)}%"></i><i class="u" style="width:${pct(span - freeLeft)}%"></i></div>
+  </div>`;
 }
 // Pour le gestionnaire : qui a la ressource en ce moment. Résumé court, détail au clic.
 function holderLine(res) {
@@ -964,7 +984,7 @@ function catalogCards() {
         <div class="rc-top"><span class="res-icon big">${ico(r.icon)}</span>${s === "occupied" ? `<span class="badge s-occupied">Occupé jusqu’à ${hhmm(holding(r)[0].end)}</span>` : badge(s)}</div>
         <h3>${esc(r.name)}</h3>
         <p class="rc-meta">${ico("pin")}${esc(r.location)}</p>
-        ${book ? "" : stockLine(r, free, out && r.status === "available" ? backNote : "")}
+        ${book ? dayLine(r) : stockLine(r, free, out && r.status === "available" ? backNote : "")}
         ${role === "admin" ? holderLine(r) : ""}
         <div class="rc-foot"><span class="rc-cat">${esc(c?.name)}${c?.approval ? `<em>Sur validation</em>` : ""}</span>${action}</div>
       </article>`;
