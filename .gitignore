@@ -1,0 +1,8 @@
+.DS_Store
+.openai/
+.vercel/
+node_modules/
+.env
+.env.*
+!.env.example
+dist/figma-reference.html
