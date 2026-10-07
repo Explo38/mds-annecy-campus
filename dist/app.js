@@ -96,7 +96,7 @@ const relDay = (d) => {
 };
 
 /* ---------- Données ---------- */
-const STORE = "mds-campus-v2";
+const STORE = "mds-campus-v3";
 const types = {
   physical: "Matériel",
   key: "Clés",
@@ -148,8 +148,14 @@ const seed = () => {
       { id: 11, name: "Salle 101 — Projet", code: "MDS-SAL-101", type: "room", cat: "spaces", icon: "room", status: "available", location: "Bâtiment A · 12 places" },
       { id: 12, name: "Studio photo", code: "MDS-STU-001", type: "room", cat: "av", icon: "camera", status: "available", location: "Bâtiment B · fond cyclo" },
       { id: 13, name: "Salle 108 — Mac", code: "MDS-SAL-108", type: "room", cat: "spaces", icon: "laptop", status: "available", location: "Bâtiment A · 20 postes" },
+      { id: 14, name: "Micro Rode Wireless GO", code: "MDS-AUD-014", type: "physical", cat: "av", icon: "box", status: "available", location: "Studio · Bâtiment B" },
+      { id: 15, name: "Trépied Manfrotto", code: "MDS-AV-015", type: "physical", cat: "av", icon: "camera", status: "available", location: "Studio · Bâtiment B" },
     ],
     requests: [
+      { id: 1023, ids: [6], user: "other", name: "Léa Fontaine", group: "B3 Création digitale", kind: "loan", start: stamp(0, 8.5), end: stamp(0, 18), status: "approved", purpose: "Shooting au studio", created: stamp(-1) },
+      { id: 1024, ids: [5], user: "other", name: "Nina Rossi", group: "M1 Expert digital", kind: "loan", start: stamp(-10), end: stamp(20, 18), status: "approved", purpose: "Projet de mémoire", created: stamp(-11) },
+      { id: 1025, ids: [15, 10], user: "other", name: "Inès Moreau", group: "B2 Création digitale", kind: "loan", start: stamp(-2), end: stamp(0, 18), status: "approved", purpose: "Tournage court-métrage", created: stamp(-3) },
+      { id: 1026, ids: [14], user: "other", name: "Hugo Bernard", group: "B1 Web", kind: "loan", start: stamp(workday(1), 9), end: stamp(workday(2), 18), status: "approved", purpose: "Interview podcast", created: stamp(-1) },
       { id: 1001, ids: [1], user: "student", name: "Alex Martin", kind: "loan", start: stamp(-3), end: stamp(2, 18), status: "approved", purpose: "Projet de fin de semestre", created: stamp(-3) },
       { id: 1002, ids: [2], user: "professor", name: "Camille Laurent", kind: "loan", start: stamp(1), end: stamp(3, 18), status: "pending", group: "B2 Création digitale", purpose: "Atelier photo", created: stamp(-1) },
       { id: 1004, ids: [3], user: "professor", name: "Camille Laurent", kind: "loan", start: stamp(-5), end: stamp(-1, 18), status: "approved", purpose: "Atelier immersif", created: stamp(-5) },
@@ -219,6 +225,7 @@ let role = "student",
   category = "",
   statusFilter = "",
   reqFilter = "all",
+  trackFilter = "all",
   cart = [],
   planView = mobile.matches ? "day" : "week",
   planDate = dayStart(new Date()),
@@ -339,11 +346,12 @@ const pages = {
   planning: ["Réservations", "calendar"],
   requests: ["Mes demandes", "inbox"],
   history: ["Historique", "history"],
+  tracking: ["Suivi", "clock"],
   approvals: ["À valider", "shield"],
   manage: ["Ressources", "settings"],
   categories: ["Catégories", "tag"],
 };
-const adminOnly = ["approvals", "manage", "categories"];
+const adminOnly = ["tracking", "approvals", "manage", "categories"];
 const pageTitle = (v) => (v === "requests" && role === "admin" ? "Demandes" : pages[v][0]);
 function navigate(v) {
   view = v;
@@ -362,12 +370,12 @@ function renderChrome() {
     <nav>
       <span class="nav-indicator" aria-hidden="true"></span>
       ${navBtn("dashboard")}${navBtn("catalog")}${navBtn("planning")}${navBtn("requests")}${navBtn("history")}
-      ${role === "admin" ? `<div class="nav-label">Gestion</div>${navBtn("approvals", pending)}${navBtn("manage")}${navBtn("categories")}` : ""}
+      ${role === "admin" ? `<div class="nav-label">Gestion</div>${navBtn("tracking", db.requests.filter((r) => reqStatus(r) === "late").length)}${navBtn("approvals", pending)}${navBtn("manage")}${navBtn("categories")}` : ""}
     </nav>
     <div class="side-bottom">
       <div class="profile"><span class="avatar">${u.initials}</span><span><b>${u.name}</b><small>${u.label}</small></span></div>
     </div>`;
-  $("#tabbar").innerHTML = ["dashboard", "catalog", "planning", role === "admin" ? "approvals" : "requests"]
+  $("#tabbar").innerHTML = (role === "admin" ? ["dashboard", "tracking", "planning", "approvals"] : ["dashboard", "catalog", "planning", "requests"])
     .map(
       (v) =>
         `<button data-nav="${v}" class="${view === v ? "active" : ""}">${ico(pages[v][1])}<span>${v === "requests" ? "Demandes" : pages[v][0]}</span>${v === "approvals" && pending ? `<i>${pending}</i>` : ""}</button>`,
@@ -466,7 +474,7 @@ const views = {
         alerts += `<button class="alert" data-nav="approvals">${ico("shield")}<span><b>${pending.length} demande${pending.length > 1 ? "s" : ""} à valider</b><small>La plus ancienne date du ${fmt(pending.map((r) => r.created).sort()[0])}.</small></span>${ico("arrow")}</button>`;
       const lateAll = db.requests.filter((r) => reqStatus(r) === "late");
       if (lateAll.length)
-        alerts += `<button class="alert pink" data-detail="${lateAll[0].id}">${ico("alert")}<span><b>${lateAll.length} retour${lateAll.length > 1 ? "s" : ""} en retard</b><small>${esc(resource(lateAll[0].ids[0])?.name)} · ${esc(lateAll[0].name)}, attendu le ${fmt(lateAll[0].end)}.</small></span>${ico("arrow")}</button>`;
+        alerts += `<button class="alert pink" data-nav="tracking">${ico("alert")}<span><b>${lateAll.length} retour${lateAll.length > 1 ? "s" : ""} en retard</b><small>${esc(resource(lateAll[0].ids[0])?.name)} · ${esc(lateAll[0].name)}, attendu le ${fmt(lateAll[0].end)}.</small></span>${ico("arrow")}</button>`;
     } else
       late.forEach(
         (r) =>
@@ -475,7 +483,7 @@ const views = {
 
     const actions =
       role === "admin"
-        ? `<button class="btn" data-nav="planning">${ico("calendar")} Planning</button><button class="btn primary" data-nav="approvals">Traiter les demandes</button>`
+        ? `<button class="btn" data-nav="tracking">${ico("clock")} Suivi des sorties</button><button class="btn primary" data-nav="approvals">Traiter les demandes</button>`
         : `<button class="btn" data-action="book">${ico("calendar")} Réserver une salle</button><button class="btn primary" data-action="loan">${ico("plus")} Emprunter du matériel</button>`;
 
     const loans = list.filter((r) => r.kind === "loan" && ["active", "late"].includes(reqStatus(r))).length;
@@ -573,6 +581,10 @@ const views = {
       `<div class="toolbar">${segmented("req", reqFilter, [["all", `Toutes · ${all.length}`], ["open", `En cours · ${all.filter(groups.open).length}`], ["closed", `Terminées · ${all.filter(groups.closed).length}`]])}</div>
       <section class="panel flush">${requestList(list, role === "admin")}</section>`
     );
+  },
+
+  tracking() {
+    return head("Suivi", "Ce qui est sorti, chez qui, et ce qui doit revenir.") + `<div id="track-body">${trackingBody()}</div>`;
   },
 
   approvals() {
@@ -692,6 +704,139 @@ function upcomingRow(r) {
   </button>`;
 }
 
+const initials = (name) =>
+  String(name)
+    .split(/\s+/)
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+const duration = (ms) => {
+  const h = Math.round(Math.abs(ms) / 36e5);
+  if (h < 24) return `${Math.max(1, h)} h`;
+  const d = Math.round(h / 24);
+  return `${d} jour${d > 1 ? "s" : ""}`;
+};
+
+/* ---------- Suivi (gestionnaire) ---------- */
+function trackingData() {
+  const now = new Date();
+  const q = query.trim().toLowerCase();
+  const match = (r) =>
+    !q || `${r.name} ${r.group || ""} ${r.ids.map((id) => `${resource(id)?.name} ${resource(id)?.code}`).join(" ")}`.toLowerCase().includes(q);
+  const open = db.requests.filter((r) => r.status === "approved" && match(r));
+  const byEnd = (a, b) => a.end.localeCompare(b.end);
+  return {
+    q,
+    late: open.filter((r) => reqStatus(r) === "late").sort(byEnd),
+    out: open.filter((r) => r.kind === "loan" && reqStatus(r) === "active").sort(byEnd),
+    rooms: open.filter((r) => r.kind === "booking" && reqStatus(r) === "active").sort(byEnd),
+    soon: open
+      .filter((r) => new Date(r.start) > now && new Date(r.start) < addDays(dayStart(now), 2))
+      .sort((a, b) => a.start.localeCompare(b.start)),
+  };
+}
+function trackingBody() {
+  const now = new Date();
+  const d = trackingData();
+  const count = (list) => list.reduce((n, r) => n + r.ids.length, 0);
+  const outCount = count(d.out) + count(d.late);
+  const dueToday = d.out.filter((r) => sameDay(r.end, now)).length;
+  const plural = (n, word) => `${word}${n > 1 ? "s" : ""}`;
+  const sections = {
+    late: ["En retard", d.late, "Matériel non rendu à la date prévue.", "pink"],
+    out: ["Matériel prêté", d.out, "Sorti et pas encore rendu, du retour le plus proche au plus lointain.", ""],
+    rooms: ["Espaces occupés maintenant", d.rooms, "Réservations en cours à cette heure.", ""],
+    soon: ["À préparer", d.soon, "Retraits et réservations d’aujourd’hui et de demain.", ""],
+    today: ["Retours attendus aujourd’hui", d.out.filter((r) => sameDay(r.end, now)), "Matériel qui doit revenir avant ce soir.", ""],
+  };
+  const keys = trackFilter === "all" ? ["late", "out", "rooms", "soon"] : [trackFilter];
+  const figure = (key, n, label, tone = "") =>
+    `<button class="${tone} ${trackFilter === key ? "on" : ""}" data-track-filter="${key}" aria-pressed="${trackFilter === key}"><strong>${n}</strong><span>${label}</span></button>`;
+  const results = keys
+    .map((k) => {
+      const [title, list, sub, tone] = sections[k];
+      if (!list.length && trackFilter === "all") return "";
+      return `<section class="panel flush track-section ${tone}"><div class="panel-head"><div><h2>${title} <span class="n">${list.length}</span></h2><p>${sub}</p></div></div>${
+        list.length ? `<div class="track-list">${list.map((r) => trackRow(r, k === "today" ? "out" : k)).join("")}</div>` : empty(d.q ? "Aucun résultat pour cette recherche." : "Rien à signaler ici.")
+      }</section>`;
+    })
+    .join("");
+  return `<div class="track-figures">
+      ${figure("out", outCount, `${plural(outCount, "objet")} ${plural(outCount, "sorti")}`)}
+      ${figure("late", d.late.length, `${plural(d.late.length, "retour")} en retard`, "pink")}
+      ${figure("today", dueToday, `${plural(dueToday, "retour")} ${plural(dueToday, "attendu")} aujourd’hui`)}
+      ${figure("rooms", d.rooms.length, `${plural(d.rooms.length, "espace")} ${plural(d.rooms.length, "occupé")}`)}
+    </div>
+    <div class="toolbar">
+      ${segmented("tf", trackFilter === "today" ? "out" : trackFilter, [["all", "Tout"], ["late", "Retards"], ["out", "Prêtés"], ["rooms", "Espaces"], ["soon", "À venir"]])}
+      <label class="search">${ico("search")}<input id="track-search" type="search" placeholder="Rechercher une personne, un objet, une référence" value="${esc(query)}"></label>
+    </div>
+    <div id="track-results">${results || `<section class="panel">${empty(d.q ? "Aucun résultat pour cette recherche." : "Rien n’est sorti pour le moment.")}</section>`}</div>`;
+}
+// Ligne du suivi : quoi, chez qui, depuis quand, jusqu’à quand.
+function trackRow(r, kind) {
+  const now = new Date(),
+    s = new Date(r.start),
+    e = new Date(r.end);
+  const progress = Math.min(100, Math.max(0, ((now - s) / (e - s)) * 100));
+  const res = r.ids.map(resource).filter(Boolean);
+  let when;
+  if (kind === "late") when = `<b class="t-late">En retard de ${duration(now - e)}</b><small>Attendu ${relDay(e)} à ${hhmm(e)}</small>`;
+  else if (kind === "soon")
+    when = `<b>${r.kind === "loan" ? "Retrait" : "Début"} ${relDay(s)} à ${hhmm(s)}</b><small>${r.kind === "loan" ? `Retour prévu le ${fmt(e)}` : `Jusqu’à ${hhmm(e)}`}</small>`;
+  else if (kind === "rooms") when = `<b>Jusqu’à ${hhmm(e)}</b><small>Libre dans ${duration(e - now)}</small>`;
+  else
+    when = `<b class="${sameDay(e, now) ? "t-soon" : ""}">Retour ${relDay(e)} à ${hhmm(e)}</b><small>Sorti ${sameDay(s, now) ? `aujourd’hui à ${hhmm(s)}` : `le ${fmt(s)}`} · depuis ${duration(now - s)}</small>`;
+  const meter = ["out", "rooms", "late"].includes(kind)
+    ? `<span class="meter ${kind === "late" ? "late" : ""}" aria-hidden="true"><i style="width:${kind === "late" ? 100 : progress}%"></i></span>`
+    : "";
+  const action =
+    r.kind === "loan" && (kind === "late" || kind === "out") ? `<button class="btn small" data-return="${r.id}">${ico("check")} Retour</button>` : "";
+  return `<div class="track-row">
+    <button class="track-what" data-detail="${r.id}">
+      <span class="res-icon" style="--c:${r.kind === "booking" ? colorOf(res[0]?.id) : kind === "late" ? "var(--pink)" : "var(--purple)"}">${ico(res[0]?.icon)}</span>
+      <span><b>${res.map((x) => esc(x.name)).join(", ")}</b><small>${res.map((x) => esc(x.code)).join(" · ")}</small></span>
+    </button>
+    <div class="track-who"><span class="avatar sm">${initials(r.name)}</span><span><b>${esc(r.name)}</b><small>${esc(r.group || users[r.user]?.label || "")}</small></span></div>
+    <div class="track-when">${when}${meter}</div>
+    <div class="track-action">${action}</div>
+  </div>`;
+}
+// Re-rendu partiel : garde le focus dans la recherche et l’en-tête en place.
+function refreshTracking(animate = true) {
+  const box = $("#track-body");
+  if (!box) return;
+  const input = $("#track-search"),
+    focused = document.activeElement === input,
+    caret = input?.selectionStart;
+  box.innerHTML = trackingBody();
+  bindTracking();
+  if (focused) {
+    const el = $("#track-search");
+    el.focus();
+    el.setSelectionRange(caret, caret);
+  }
+  if (animate) reveal($$("#track-results .track-section"), { y: 8, step: 50, duration: 340 });
+}
+function bindTracking() {
+  const setFilter = (v) => {
+    trackFilter = v;
+    const seg = $('[data-seg="tf"]');
+    $$("[data-tf]", seg).forEach((x) => x.classList.toggle("active", x.dataset.tf === (v === "today" ? "out" : v)));
+    moveThumb(seg);
+    setTimeout(refreshTracking, motionOK ? 140 : 0);
+  };
+  $$("[data-tf]").forEach((b) => (b.onclick = () => setFilter(b.dataset.tf)));
+  $$("[data-track-filter]").forEach((b) => (b.onclick = () => setFilter(trackFilter === b.dataset.trackFilter ? "all" : b.dataset.trackFilter)));
+  $("#track-search").oninput = (e) => {
+    query = e.target.value;
+    refreshTracking(false);
+  };
+  $$("#track-body [data-detail]").forEach((b) => (b.onclick = () => detail(+b.dataset.detail)));
+  $$("[data-return]").forEach((b) => (b.onclick = () => returnForm(db.requests.find((r) => r.id === +b.dataset.return))));
+}
+
 function requestList(list, showUser = false, emptyText = "Aucune demande pour le moment.") {
   if (!list.length) return empty(emptyText);
   return `<div class="req-list">${list
@@ -709,6 +854,13 @@ function requestList(list, showUser = false, emptyText = "Aucune demande pour le
     .join("")}</div>`;
 }
 
+// Pour le gestionnaire : qui a la ressource en ce moment.
+function holderLine(res) {
+  const q = db.requests.find((x) => x.ids.includes(res.id) && x.status === "approved" && ["active", "late"].includes(reqStatus(x)));
+  if (!q) return "";
+  const late = reqStatus(q) === "late";
+  return `<button class="rc-holder ${late ? "late" : ""}" data-detail="${q.id}"><span class="avatar xs">${initials(q.name)}</span><span>${q.kind === "loan" ? "Chez" : "Occupé par"} <b>${esc(q.name)}</b> · ${late ? "en retard" : q.kind === "loan" ? `retour ${relDay(q.end)}` : `jusqu’à ${hhmm(q.end)}`}</span></button>`;
+}
 function catalogCards() {
   const manage = view === "manage";
   const list = db.resources.filter(
@@ -737,6 +889,7 @@ function catalogCards() {
         <div class="rc-top"><span class="res-icon big">${ico(r.icon)}</span>${badge(s)}</div>
         <h3>${esc(r.name)}</h3>
         <p class="rc-meta">${ico("pin")}${esc(r.location)}</p>
+        ${role === "admin" ? holderLine(r) : ""}
         <div class="rc-foot"><span class="rc-cat">${esc(c?.name)}${c?.approval ? `<em>Sur validation</em>` : ""}</span>${action}</div>
       </article>`;
     })
@@ -1513,6 +1666,7 @@ function bind() {
   bindCards();
   bindSlots();
   if (view === "planning") bindPlan();
+  if (view === "tracking") bindTracking();
 }
 
 function bindCards() {
@@ -1539,6 +1693,7 @@ function bindCards() {
       }),
   );
   $$("[data-book]").forEach((b) => (b.onclick = () => openBooking({ resId: +b.dataset.book })));
+  $$("#catalog-results [data-detail]").forEach((b) => (b.onclick = () => detail(+b.dataset.detail)));
   $$("[data-edit]").forEach((b) => (b.onclick = () => editResource(+b.dataset.edit)));
   $$("[data-reset-filters]").forEach(
     (b) =>

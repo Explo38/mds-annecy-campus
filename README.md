@@ -44,8 +44,20 @@ L’onglet **Réservations** affiche les salles, l’amphithéâtre et les véhi
 
 Les pastilles permettent de masquer ou d’afficher un espace. Les créneaux en attente de validation sont hachurés et vos propres réservations sont entourées. Le formulaire de réservation montre les disponibilités de l’espace et signale un chevauchement avant l’envoi.
 
+## Suivi (gestionnaire)
+
+L’onglet **Gestion › Suivi** répond à « qu’est-ce qui est sorti, et chez qui ? » :
+
+- compteurs cliquables : objets sortis, retours en retard, retours attendus aujourd’hui, espaces occupés ;
+- **En retard** : matériel non rendu, avec la durée du retard et l’emprunteur ;
+- **Matériel prêté** : chaque objet sorti, chez qui, depuis quand et la date de retour, avec une barre d’avancement ;
+- **Espaces occupés maintenant** : salles et véhicules utilisés à cette heure, et jusqu’à quand ;
+- **À préparer** : retraits et réservations d’aujourd’hui et de demain.
+
+Une recherche filtre par personne, objet ou référence, et le bouton **Retour** enregistre directement le retour et l’état du matériel. Dans **Ressources**, chaque carte indique aussi qui a la ressource en ce moment.
+
 ## Périmètre du prototype
 
-Catalogue, demandes, paniers d’emprunt et de réservation, planning, historique et écrans de gestion. Les données sont conservées dans le `localStorage` de chaque navigateur (clé `mds-campus-v2`). Il n’y a ni serveur, ni authentification réelle, ni base de données partagée : les rôles servent uniquement à simuler les parcours.
+Catalogue, demandes, paniers d’emprunt et de réservation, planning, historique et écrans de gestion. Les données sont conservées dans le `localStorage` de chaque navigateur (clé `mds-campus-v3`). Il n’y a ni serveur, ni authentification réelle, ni base de données partagée : les rôles servent uniquement à simuler les parcours.
 
 Les maquettes Figma ont évolué séparément du prototype HTML. Ce dépôt contient la version du prototype local ; il ne constitue pas une nouvelle intégration des dernières maquettes.

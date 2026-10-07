@@ -934,6 +934,182 @@ main {
   justify-self: start;
 }
 
+/* ---------- Suivi ---------- */
+.track-figures {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.track-figures button {
+  display: grid;
+  gap: 4px;
+  padding: 18px 20px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  text-align: left;
+  transition:
+    border-color 0.2s,
+    background 0.2s,
+    transform 0.2s var(--ease);
+}
+.track-figures button:hover {
+  transform: translateY(-2px);
+  border-color: var(--purple-200);
+}
+.track-figures button.on {
+  border-color: var(--purple);
+  background: var(--purple-50);
+}
+.track-figures strong {
+  font: 800 34px/1 var(--font-title);
+  color: var(--purple);
+}
+.track-figures span {
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.track-figures .pink strong {
+  color: var(--pink);
+}
+.track-figures .pink.on {
+  border-color: var(--pink);
+  background: var(--pink-50);
+}
+.track-section .panel-head {
+  padding: 20px 24px 0;
+  margin-bottom: 8px;
+}
+.track-section .n {
+  display: inline-grid;
+  place-items: center;
+  min-width: 26px;
+  height: 22px;
+  margin-left: 6px;
+  padding: 0 7px;
+  border-radius: var(--r-pill);
+  background: var(--gray-100);
+  font: 700 13px var(--font);
+  color: var(--ink-2);
+  vertical-align: 3px;
+}
+.track-section.pink {
+  border-color: var(--pink-100);
+}
+.track-section.pink h2 {
+  color: var(--pink-700);
+}
+.track-section.pink .n {
+  background: var(--pink-100);
+  color: var(--pink-700);
+}
+main > .track-section + .track-section,
+#track-results > .track-section + .track-section {
+  margin-top: 20px;
+}
+.track-row {
+  display: grid;
+  grid-template-columns: minmax(200px, 1.3fr) minmax(170px, 1fr) minmax(200px, 1.1fr) 110px;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 24px;
+  border-top: 1px solid var(--line-soft);
+}
+.track-what {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  min-width: 0;
+}
+.track-what:hover b {
+  color: var(--purple);
+}
+.track-what b,
+.track-who b {
+  display: block;
+  font-weight: 600;
+}
+.track-what small,
+.track-who small,
+.track-when small {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+}
+.track-who {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+.avatar.sm {
+  width: 32px;
+  height: 32px;
+  font-size: 12px;
+}
+.avatar.xs {
+  width: 22px;
+  height: 22px;
+  font-size: 10px;
+}
+.track-when {
+  font-size: 14px;
+}
+.track-when b {
+  font-weight: 600;
+}
+.t-late {
+  color: var(--pink-700);
+}
+.t-soon {
+  color: var(--amber);
+}
+.meter {
+  display: block;
+  height: 4px;
+  margin-top: 8px;
+  border-radius: 2px;
+  background: var(--gray-200);
+  overflow: hidden;
+}
+.meter i {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--purple);
+  transform-origin: left;
+  animation: grow 0.8s var(--ease) both;
+}
+.meter.late i {
+  background: var(--pink);
+}
+@keyframes grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+.track-action {
+  justify-self: end;
+}
+.rc-holder {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 6px 10px 6px 6px;
+  border-radius: var(--r-pill);
+  background: var(--purple-50);
+  font-size: 12px;
+  color: var(--ink-2);
+  text-align: left;
+}
+.rc-holder.late {
+  background: var(--pink-50);
+  color: var(--pink-700);
+}
+
 /* ---------- À valider ---------- */
 .approvals {
   display: grid;
@@ -2076,6 +2252,22 @@ dialog.closing::backdrop {
   }
 }
 
+@media (max-width: 1100px) {
+  .track-figures {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .track-row {
+    grid-template-columns: 1fr 1fr auto;
+  }
+  .track-when {
+    grid-column: 1 / 3;
+  }
+  .track-action {
+    grid-row: 1 / 3;
+    grid-column: 3;
+  }
+}
+
 @media (max-width: 860px) {
   :root {
     --side: 0px;
@@ -2239,6 +2431,43 @@ dialog.closing::backdrop {
   }
   .approvals {
     grid-template-columns: 1fr;
+  }
+  .segmented button {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+  .track-figures {
+    gap: 8px;
+  }
+  .track-figures button {
+    padding: 14px;
+  }
+  .track-figures strong {
+    font-size: 28px;
+  }
+  .track-figures span {
+    font-size: 12px;
+  }
+  .track-section .panel-head {
+    padding: 16px 16px 0;
+  }
+  .track-row {
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    padding: 14px 16px;
+  }
+  .track-what {
+    grid-column: 1 / -1;
+  }
+  .track-who {
+    grid-column: 1;
+  }
+  .track-when {
+    grid-column: 1 / -1;
+  }
+  .track-action {
+    grid-row: 2;
+    grid-column: 2;
   }
   .approval-actions .btn {
     flex: 1;
