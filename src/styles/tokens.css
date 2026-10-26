@@ -1,0 +1,93 @@
+/*
+ * Tokens issus de la maquette Figma « Application metier fait main ».
+ * Les noms reprennent les variables Figma (--ink, --secondaire, --line, --space-*, --radius-*).
+ */
+
+:root {
+  /* — Couleurs de marque — */
+  --secondaire: #fb7500; /* orange campus */
+  --secondaire-hover: #e56a00;
+  --secondaire-press: #cc5f00;
+  --violet: #6952dd; /* le point du logo « campus. » */
+
+  /* — Texte — */
+  --ink: #232537;
+  --muted: #828594;
+  --muted-2: #9698a6;
+  --muted-3: #9799a6;
+  --muted-4: #9596a3;
+  --breadcrumb: #a0a2ad;
+  --breadcrumb-active: #626574;
+  --nav-idle: #737586;
+  --stat-label: #747787;
+  --header-label: #868898;
+
+  /* — Surfaces — */
+  --color-surface-default: #ffffff;
+  --surface-page: #f7f8fb;
+  --surface-subtle: #fcfcfe;
+  --surface-icon: #f2f3f8;
+  --line: #ececf2;
+  --line-soft: #f0f0f5;
+
+  /* — Teintes orange — */
+  --orange-50: #fff7ef;
+  --orange-100: #fff5ec;
+  --orange-150: #fff5ed;
+  --orange-200: #fff1e6;
+  --orange-300: #ffe6d0;
+
+  /* — Statuts (kit UI Figma « Statut ») — */
+  --status-success-bg: #eaf7f0;
+  --status-success-fg: #388967;
+  --status-warning-bg: #fff1e6;
+  --status-warning-fg: #bc803b;
+  --status-info-bg: #eeebfb;
+  --status-info-fg: #7c64c9;
+  --status-danger-bg: #fcecec;
+  --status-danger-fg: #c76360;
+  --status-neutral-bg: #ececf2;
+  --status-neutral-fg: #828594;
+
+  /* Pastille d'icône des cartes indicateur */
+  --indicator-icon-bg: #efebfc;
+  --check-green: #278b69;
+
+  /* — Espacements Figma — */
+  --space-0: 0px;
+  --space-4: 4px;
+  --space-5: 5px;
+  --space-6: 6px;
+  --space-8: 8px;
+  --space-10: 10px;
+  --space-12: 12px;
+  --space-14: 14px;
+  --space-15: 15px;
+  --space-17: 17px;
+  --space-18: 18px;
+  --space-20: 20px;
+  --space-24: 24px;
+
+  /* — Rayons Figma — */
+  --radius-5: 5px;
+  --radius-8: 8px;
+  --radius-11: 11px;
+  --radius-12: 12px;
+
+  /* — Typographie — */
+  --font-body: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* — Gabarit — */
+  --sidebar-w: 238px;
+  --header-h: 78px;
+  --content-max: 1178px;
+
+  /* — Ombres — */
+  --shadow-card: 0 1px 2px rgba(35, 37, 55, 0.04);
+  --shadow-pop: 0 18px 44px -18px rgba(35, 37, 55, 0.28);
+  --shadow-focus: 0 0 0 3px rgba(251, 117, 0, 0.18);
+
+  /* — Dégradé de l'en-tête des cartes ressource — */
+  --card-media: linear-gradient(167.95deg, #fff7f0 6.17%, #faf9fd 93.83%);
+}
