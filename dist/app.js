@@ -1080,6 +1080,8 @@ function planLabel() {
   if (planView === "list") return "Les 30 prochains jours";
   return longDay(planDate);
 }
+// Ressource proposée par défaut à la réservation : si rien n'est sélectionné, toutes sont candidates.
+const planShown = (id) => reservables().every((r) => planHidden.includes(r.id)) || !planHidden.includes(id);
 function planChips() {
   const list = reservables();
   return (
@@ -1088,7 +1090,9 @@ function planChips() {
         (r) =>
           `<button class="chip ${planHidden.includes(r.id) ? "off" : ""}" data-chip="${r.id}" style="--c:${colorOf(r.id)}" aria-pressed="${!planHidden.includes(r.id)}"><i></i>${esc(r.name.split(" — ")[0])}</button>`,
       )
-      .join("") + (planHidden.length ? `<button class="chip reset" data-chip="all">Tout afficher</button>` : "")
+      .join("") +
+    (planHidden.length < list.length ? `<button class="chip reset" data-chip="none">Tout désélectionner</button>` : "") +
+    (planHidden.length ? `<button class="chip reset" data-chip="all">Tout afficher</button>` : "")
   );
 }
 // Une entrée par ressource réservée et par jour traversé.
@@ -1193,7 +1197,9 @@ function dayTimeline(day, compact = false) {
   const now = new Date();
   const span = H1 - H0;
   const pct = (h) => ((h - H0) / span) * 100;
-  const res = reservables().filter((r) => compact || !planHidden.includes(r.id));
+  // Rien de sélectionné : le calendrier reste affiché en entier (toutes les lignes, cliquables pour réserver), sans les réservations.
+  const none = !compact && reservables().every((r) => planHidden.includes(r.id));
+  const res = none ? reservables() : reservables().filter((r) => compact || !planHidden.includes(r.id));
   const all = db.requests.filter(
     (r) => r.kind === "booking" && ["approved", "pending"].includes(r.status) && new Date(r.start) < atHour(day, H1) && new Date(r.end) > atHour(day, H0),
   );
@@ -1214,7 +1220,7 @@ function dayTimeline(day, compact = false) {
           .join("");
         return `<div class="tl-row" style="--c:${colorOf(x.id)}">
           <div class="tl-name"><i></i><span><b>${esc(x.name.split(" — ")[0])}</b><small>${esc(x.location.split(" · ").pop())}</small></span></div>
-          <div class="tl-track ${x.status !== "available" ? "blocked" : ""}" data-track="${x.id}" data-day="${localISO(day)}"><div class="slot-ghost" aria-hidden="true"></div>${bars}${nowLine}</div>
+          <div class="tl-track ${x.status !== "available" ? "blocked" : ""}" data-track="${x.id}" data-day="${localISO(day)}"><div class="slot-ghost" aria-hidden="true"></div>${none ? "" : bars}${nowLine}</div>
         </div>`;
       })
       .join("")}
@@ -1260,11 +1266,11 @@ function bindPlan() {
       (b.onclick = () => {
         const id = b.dataset.chip;
         if (id === "all") planHidden = [];
+        else if (id === "none") planHidden = reservables().map((r) => r.id);
         else {
           const n = +id;
-          const visibleCount = reservables().length - planHidden.length;
           if (planHidden.includes(n)) planHidden = planHidden.filter((x) => x !== n);
-          else if (visibleCount > 1) planHidden.push(n);
+          else planHidden.push(n);
         }
         updatePlan();
       }),
@@ -1339,7 +1345,7 @@ const dateValue = (d) => localISO(d).slice(0, 10);
 
 function openBooking({ resId, date, hour } = {}) {
   const list = reservables();
-  const res = resource(resId) || list.find((r) => !planHidden.includes(r.id) && r.status === "available") || list[0];
+  const res = resource(resId) || list.find((r) => planShown(r.id) && r.status === "available") || list[0];
   const now = new Date();
   date = date || dayStart(now);
   if (hour == null) hour = sameDay(date, now) ? Math.min(H1 - 2, Math.max(H0, Math.ceil(hourOf(now) * 2) / 2)) : 9;
