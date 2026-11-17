@@ -6,6 +6,7 @@ const icons = {
   grid: "M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z",
   box: "m12 3 9 5v9l-9 5-9-5V8z M3 8l9 5 9-5 M12 13v9",
   calendar: "M5 5h14a2 2 0 012 2v13H3V7a2 2 0 012-2 M7 3v4 M17 3v4 M3 10h18",
+  star: "M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z",
   clock: "M12 8v5l3 2 M21 12a9 9 0 11-18 0 9 9 0 0118 0",
   check: "m5 12 4 4L19 6",
   arrow: "M5 12h14 m-5-5 5 5-5 5",
@@ -96,6 +97,19 @@ const relDay = (d) => {
   if (diff > 1 && diff < 7) return new Date(d).toLocaleDateString("fr-FR", { weekday: "long" });
   return `le ${fmt(d)}`;
 };
+
+// Durée écoulée depuis une date : « il y a 2 jours », « il y a 3 h ». Toujours accompagnée de la date exacte à côté.
+const ago = (d) => {
+  const ms = Date.now() - new Date(d).getTime();
+  if (ms < 6e4) return "à l’instant";
+  const h = Math.round(ms / 36e5);
+  if (h < 1) return `il y a ${Math.max(1, Math.round(ms / 6e4))} min`;
+  if (h < 24) return `il y a ${h} h`;
+  const j = Math.round(h / 24);
+  return `il y a ${j} jour${j > 1 ? "s" : ""}`;
+};
+// Date précise : « hier à 18:00 », « le 12 nov. à 18:00 ».
+const when = (d) => `${relDay(d)} à ${hhmm(d)}`;
 
 /* ---------- Données ---------- */
 const STORE = "mds-campus-v4";
@@ -211,11 +225,11 @@ const labels = {
   reserved: "Réservé",
   maintenance: "En maintenance",
   unavailable: "Indisponible",
-  pending: "En attente",
+  pending: "En cours de validation",
   approved: "Validée",
   late: "En retard",
   active: "En cours",
-  returned: "Rendue",
+  returned: "Terminée",
   finished: "Terminée",
   cancelled: "Annulée",
   rejected: "Refusée",
@@ -238,8 +252,48 @@ let role = "student",
   planView = mobile.matches ? "day" : "week",
   planDate = dayStart(new Date()),
   planHidden = [],
+  dashFilter = "",
+  dashAll = false,
   lastView = null,
   prevIndicator = null;
+
+/* ---------- Formulaires : champs obligatoires et états du matériel ---------- */
+const REQ = '<abbr class="req" title="Obligatoire">*</abbr>';
+const PROJECT_KINDS = ["Cours ou TP", "Projet personnel", "Projet de groupe", "Tournage ou shooting", "Stage ou alternance", "Autre"];
+const CONDITIONS = {
+  ok: ["Bon état", "s-approved"],
+  minor: ["Défaut mineur", "s-pending"],
+  broken: ["Ne fonctionne pas", "s-late"],
+};
+// Dernière remarque connue sur une ressource (signalée par un étudiant ou notée par l’accueil).
+function lastReport(id) {
+  const all = db.requests
+    .flatMap((q) => (q.reports || []).map((x) => ({ ...x, q })))
+    .filter((x) => x.items?.[id] && x.items[id] !== "ok")
+    .sort((a, b) => b.at.localeCompare(a.at));
+  return all[0];
+}
+
+/* ---------- Favoris (propres à chaque profil, gardés sur cet appareil) ---------- */
+const favKey = () => `mds-campus-favs-${role}`;
+const getFavs = () => {
+  try {
+    return JSON.parse(localStorage.getItem(favKey())) || [];
+  } catch {
+    return [];
+  }
+};
+const isFav = (id) => getFavs().includes(id);
+function toggleFav(id) {
+  const list = getFavs();
+  const next = list.includes(id) ? list.filter((x) => x !== id) : [...list, id];
+  try {
+    localStorage.setItem(favKey(), JSON.stringify(next));
+  } catch {
+    toast("Stockage local indisponible : vos favorites ne seront pas conservées.", "warn");
+  }
+  return next.includes(id);
+}
 
 /* ---------- Sélecteurs métier ---------- */
 const resource = (id) => db.resources.find((r) => r.id === id);
@@ -277,6 +331,19 @@ const resStatus = (r) => {
 // Nom avec quantité, ex. « Kit câbles × 2 ».
 const itemName = (q, id) => `${esc(resource(id)?.name)}${units(q, id) > 1 ? ` × ${units(q, id)}` : ""}`;
 const badge = (s) => `<span class="badge s-${s}">${labels[s] || s}</span>`;
+// Libellé d’une demande : dit de quoi il s’agit et à quel moment on en est (jamais « Validée » tout seul).
+function statusText(r) {
+  const s = reqStatus(r),
+    loan = r.kind === "loan";
+  if (s === "late") return `En retard de ${duration(Date.now() - new Date(r.end))}`;
+  if (s === "approved") return loan ? "Validée · à retirer" : "Validée · à venir";
+  if (s === "active") return loan ? "Emprunt en cours" : "Réservation en cours";
+  return labels[s] || s;
+}
+const reqBadge = (r) => {
+  const s = reqStatus(r);
+  return `<span class="badge s-${s}">${statusText(r)}</span>`;
+};
 const mine = () => db.requests.filter((r) => role === "admin" || r.user === role);
 const visible = (r) => role === "admin" || r.user === role;
 const cartIds = () => Object.keys(cart).map(Number);
@@ -435,6 +502,8 @@ function bindChrome() {
   $("#topbar [data-action=cart]").onclick = openCart;
   $("#role").onchange = (e) => {
     role = e.target.value;
+    dashFilter = "";
+    dashAll = false;
     cart = {};
     prevIndicator = null;
     lastView = null;
@@ -491,6 +560,65 @@ function scrollToNow() {
   });
 }
 
+/* ---------- Tableau de bord : frise filtrée + favorites ---------- */
+const DASH_LIMIT = 6;
+const buildingOf = (r) => (r.location.match(/Bâtiment ([A-Z])/) || [])[1];
+function dashPlan() {
+  const all = reservables(),
+    favIds = getFavs().filter((id) => all.some((r) => r.id === id));
+  const f = dashFilter && dashFilter !== "all" ? dashFilter : favIds.length ? "fav" : "free";
+  const buildings = [...new Set(all.map(buildingOf).filter(Boolean))].sort();
+  const kinds = [...new Set(all.map((r) => r.type))];
+  const opts = [
+    ["fav", `${ico("star")} Mes favorites · ${favIds.length}`],
+    ["free", `Libres maintenant · ${all.filter((r) => resStatus(r) === "available").length}`],
+    ...buildings.map((b) => [`b:${b}`, `Bâtiment ${b} · ${all.filter((r) => buildingOf(r) === b).length}`]),
+    ...kinds.map((t) => [`t:${t}`, `${types[t]} · ${all.filter((r) => r.type === t).length}`]),
+  ];
+  const match = (r) =>
+    f === "fav" ? favIds.includes(r.id) : f === "free" ? resStatus(r) === "available" : f.startsWith("b:") ? buildingOf(r) === f.slice(2) : r.type === f.slice(2);
+  const list = all.filter(match);
+  const shown = dashAll ? list : list.slice(0, DASH_LIMIT);
+  const chips = `<div class="chips dash-chips" role="group" aria-label="Choisir les salles à afficher">${opts
+    .map(([v, t]) => `<button class="chip ${v === f ? "on" : ""}" data-dfilter="${v}" aria-pressed="${v === f}">${t}</button>`)
+    .join("")}</div>`;
+  const body = !list.length
+    ? f === "fav"
+      ? empty("Aucune favorite pour l’instant. Touchez l’étoile d’une salle pour la retrouver ici en un coup d’œil.", `<button class="btn small" data-dfilter="free">Voir les salles libres</button>`)
+      : empty("Aucune salle libre en ce moment. Choisissez un bâtiment ou ouvrez le planning pour réserver plus tard.")
+    : `<div class="scroll-x">${dayTimeline(dayStart(new Date()), true, shown)}</div>`;
+  const more =
+    list.length > DASH_LIMIT
+      ? `<button class="link dash-more" data-dmore>${dashAll ? "Réduire la liste" : `Afficher les ${list.length - DASH_LIMIT} autres salles`}</button>`
+      : "";
+  return chips + body + more;
+}
+function refreshDashPlan() {
+  const box = $("#dash-plan");
+  if (!box) return;
+  box.innerHTML = dashPlan();
+  bindDashPlan();
+}
+function bindDashPlan() {
+  const box = $("#dash-plan");
+  if (!box) return;
+  $$("[data-dfilter]", box).forEach((b) => (b.onclick = () => ((dashFilter = b.dataset.dfilter), (dashAll = false), refreshDashPlan())));
+  const more = $("[data-dmore]", box);
+  if (more) more.onclick = () => ((dashAll = !dashAll), refreshDashPlan());
+  $$("[data-fav]", box).forEach(
+    (b) =>
+      (b.onclick = () => {
+        const r = resource(+b.dataset.fav);
+        // On garde le filtre affiché : ajouter une favorite ne doit pas changer la vue.
+        dashFilter ||= $(".dash-chips .chip.on")?.dataset.dfilter || "free";
+        const on = toggleFav(r.id);
+        refreshDashPlan();
+        toast(on ? `${r.name.split(" — ")[0]} ajoutée à vos favorites.` : `${r.name.split(" — ")[0]} retirée de vos favorites.`);
+      }),
+  );
+  bindSlots(box);
+}
+
 const views = {
   dashboard() {
     const now = new Date();
@@ -508,14 +636,14 @@ const views = {
     let alerts = "";
     if (role === "admin") {
       if (pending.length)
-        alerts += `<button class="alert" data-nav="approvals">${ico("shield")}<span><b>${pending.length} demande${pending.length > 1 ? "s" : ""} à valider</b><small>La plus ancienne date du ${fmt(pending.map((r) => r.created).sort()[0])}.</small></span>${ico("arrow")}</button>`;
+        alerts += `<button class="alert" data-nav="approvals">${ico("shield")}<span><b>${pending.length} demande${pending.length > 1 ? "s" : ""} à valider</b><small>La plus ancienne attend depuis ${duration(Date.now() - new Date(pending.map((r) => r.created).sort()[0]))} (demandée le ${fmt(pending.map((r) => r.created).sort()[0])}).</small></span>${ico("arrow")}</button>`;
       const lateAll = db.requests.filter((r) => reqStatus(r) === "late");
       if (lateAll.length)
-        alerts += `<button class="alert pink" data-nav="tracking">${ico("alert")}<span><b>${lateAll.length} retour${lateAll.length > 1 ? "s" : ""} en retard</b><small>${esc(resource(lateAll[0].ids[0])?.name)} · ${esc(lateAll[0].name)}, attendu le ${fmt(lateAll[0].end)}.</small></span>${ico("arrow")}</button>`;
+        alerts += `<button class="alert pink" data-nav="tracking">${ico("alert")}<span><b>${lateAll.length} retour${lateAll.length > 1 ? "s" : ""} en retard</b><small>${esc(resource(lateAll[0].ids[0])?.name)} · ${esc(lateAll[0].name)}, en retard de ${duration(Date.now() - new Date(lateAll[0].end))} (attendu ${when(lateAll[0].end)}).${lateAll.length > 1 ? ` Les autres sont dans le suivi.` : ""}</small></span>${ico("arrow")}</button>`;
     } else
       late.forEach(
         (r) =>
-          (alerts += `<button class="alert pink" data-detail="${r.id}">${ico("alert")}<span><b>${esc(resource(r.ids[0])?.name)} à rendre</b><small>Le retour était prévu ${relDay(r.end)}. Merci de le rapporter à l’accueil.</small></span>${ico("arrow")}</button>`),
+          (alerts += `<button class="alert pink" data-detail="${r.id}">${ico("alert")}<span><b>${esc(resource(r.ids[0])?.name)} : retour en retard de ${duration(Date.now() - new Date(r.end))}</b><small>Il devait être rendu ${when(r.end)}. Merci de le rapporter à l’accueil.</small></span>${ico("arrow")}</button>`),
       );
 
     const actions =
@@ -527,7 +655,7 @@ const views = {
     const next = list.filter((r) => r.kind === "booking" && ["approved", "pending"].includes(r.status) && new Date(r.end) > now).length;
     const summary =
       role === "admin"
-        ? `${pending.length} demande${pending.length > 1 ? "s" : ""} en attente et ${todayCount} réservation${todayCount > 1 ? "s" : ""} aujourd’hui.`
+        ? `${pending.length} demande${pending.length > 1 ? "s" : ""} à valider et ${todayCount} réservation${todayCount > 1 ? "s" : ""} aujourd’hui.`
         : loans || next
           ? `Vous avez ${loans ? `${loans} emprunt${loans > 1 ? "s" : ""} en cours` : ""}${loans && next ? " et " : ""}${next ? `${next} réservation${next > 1 ? "s" : ""} à venir` : ""}.`
           : "Rien de prévu pour l’instant.";
@@ -548,7 +676,7 @@ const views = {
           </section>
           <section class="panel">
             <div class="panel-head"><div><h2>Aujourd’hui sur le campus</h2><p>${todayCount} réservation${todayCount > 1 ? "s" : ""} · cliquez sur un créneau libre pour réserver</p></div><button class="link" data-nav="planning">Ouvrir le planning</button></div>
-            <div class="scroll-x">${dayTimeline(dayStart(now), true)}</div>
+            <div id="dash-plan">${dashPlan()}</div>
           </section>
         </div>
         <details class="panel help-fold">
@@ -612,7 +740,7 @@ const views = {
         ? `<div class="approvals">${list
             .map(
               (r) => `<article class="approval">
-              <div class="approval-who"><span class="avatar">${esc(r.name.split(" ").map((w) => w[0]).join("").slice(0, 2))}</span><div><b>${esc(r.name)}</b><small>${esc(r.group || (users[r.user]?.label ?? "Externe"))} · demandé le ${fmt(r.created)}</small></div></div>
+              <div class="approval-who"><span class="avatar">${esc(r.name.split(" ").map((w) => w[0]).join("").slice(0, 2))}</span><div><b>${esc(r.name)}</b><small>${esc(r.group || (users[r.user]?.label ?? "Externe"))} · demandée ${ago(r.created)} (${fmt(r.created)})</small></div></div>
               <div class="approval-what">${r.ids.map((id) => `<span class="pill-res">${ico(resource(id)?.icon)}${itemName(r, id)}</span>`).join("")}</div>
               <p class="approval-when">${ico("calendar")} ${dateRange(r)}</p>
               ${r.purpose ? `<p class="approval-why">« ${esc(r.purpose)} »</p>` : ""}
@@ -733,7 +861,7 @@ const views = {
       </div>
       <div class="chips" id="plan-chips">${planChips()}</div>
       <section class="panel flush plan-panel"><div id="plan-body">${planBody()}</div></section>
-      <div class="legend"><span><i class="lg-ok"></i>Validée</span><span><i class="lg-pending"></i>En attente de validation</span><span><i class="lg-mine"></i>Vos réservations</span></div>`
+      <div class="legend"><span><i class="lg-ok"></i>Validée</span><span><i class="lg-pending"></i>En cours de validation</span><span><i class="lg-mine"></i>Vos réservations</span></div>`
     );
   },
 };
@@ -765,7 +893,7 @@ function upcomingRow(r) {
   return `<button class="up-row" data-detail="${r.id}" style="--c:${r.kind === "booking" ? colorOf(res?.id) : "var(--purple)"}">
     <span class="res-icon">${ico(res?.icon)}</span>
     <span class="up-main"><b>${itemName(r, r.ids[0])}${r.ids.length > 1 ? ` + ${r.ids.length - 1}` : ""}</b><small>${when}</small></span>
-    ${badge(s)}${ico("chevR", "chev")}
+    ${reqBadge(r)}${ico("chevR", "chev")}
   </button>`;
 }
 
@@ -857,11 +985,11 @@ function trackRow(r, kind) {
     ? `<span class="meter ${kind === "late" ? "late" : ""}" aria-hidden="true"><i style="width:${kind === "late" ? 100 : progress}%"></i></span>`
     : "";
   const action =
-    r.kind === "loan" && (kind === "late" || kind === "out") ? `<button class="btn small" data-return="${r.id}">${ico("check")} Retour</button>` : "";
+    r.kind === "loan" && (kind === "late" || kind === "out") ? `<button class="btn small" data-return="${r.id}" title="Enregistrer le retour de ce matériel">${ico("check")} Réceptionner</button>` : "";
   return `<div class="track-row">
     <button class="track-what" data-detail="${r.id}">
       <span class="res-icon" style="--c:${r.kind === "booking" ? colorOf(res[0]?.id) : kind === "late" ? "var(--pink)" : "var(--purple)"}">${ico(res[0]?.icon)}</span>
-      <span><b>${r.ids.map((id) => itemName(r, id)).join(", ")}</b><small>${res.map((x) => esc(x.code)).join(" · ")}</small></span>
+      <span><b>${r.ids.map((id) => itemName(r, id)).join(", ")}</b><small>${res.map((x) => esc(x.code)).join(" · ")}${r.reports?.length ? ` · <em class="flag">Signalement</em>` : ""}</small></span>
     </button>
     <div class="track-who"><span class="avatar sm">${initials(r.name)}</span><span><b>${esc(r.name)}</b><small>${esc(r.group || users[r.user]?.label || "")}</small></span></div>
     <div class="track-when">${when}${meter}</div>
@@ -912,7 +1040,7 @@ function requestList(list, showUser = false, emptyText = "Aucune demande pour le
         <span class="req-main"><b>${itemName(r, r.ids[0])}${r.ids.length > 1 ? ` + ${r.ids.length - 1}` : ""}</b><small>${r.kind === "loan" ? "Emprunt" : "Réservation"} · n° ${r.id}</small></span>
         ${showUser ? `<span class="req-user">${esc(r.name)}<small>${esc(r.group || users[r.user]?.label || "")}</small></span>` : ""}
         <span class="req-date">${dateRange(r)}</span>
-        ${badge(reqStatus(r))}
+        ${reqBadge(r)}
         ${ico("chevR", "chev")}
       </button>`;
     })
@@ -964,8 +1092,8 @@ function holderLine(res) {
     : `${list.length} emprunteurs`;
   const sub = lateCount
     ? single
-      ? "En retard"
-      : `Dont ${lateCount} en retard`
+      ? `En retard de ${duration(Date.now() - new Date(q.end))}`
+      : `Dont ${lateCount} en retard (le plus ancien : ${duration(Date.now() - new Date(list.find((x) => reqStatus(x) === "late").end))})`
     : single
       ? when(q)[0].toUpperCase() + when(q).slice(1)
       : `Prochain ${when(next)}`;
@@ -988,8 +1116,8 @@ function holdersModal(id) {
           return `<div class="holder-row">
             <button class="holder-who" data-detail="${q.id}"><span class="avatar sm">${initials(q.name)}</span><span><b>${esc(q.name)}</b><small>${esc(q.group || users[q.user]?.label || "")}</small></span></button>
             <span class="holder-qty">${units(q, id) > 1 ? `× ${units(q, id)}` : ""}</span>
-            <span class="holder-when ${late ? "t-late" : ""}">${late ? `En retard de ${duration(new Date() - new Date(q.end))}` : `Retour ${relDay(q.end)}`}<small>Sorti le ${fmt(q.start)}</small></span>
-            ${q.kind === "loan" ? `<button class="btn small" data-return="${q.id}">Retour</button>` : ""}
+            <span class="holder-when ${late ? "t-late" : ""}">${late ? `En retard de ${duration(new Date() - new Date(q.end))}` : `Retour ${when(q.end)}`}<small>Sorti le ${fmt(q.start, true)}</small></span>
+            ${q.kind === "loan" ? `<button class="btn small" data-return="${q.id}" title="Enregistrer le retour de ce matériel">Réceptionner</button>` : ""}
           </div>`;
         })
         .join("")}</div>
@@ -1024,7 +1152,8 @@ function catalogCards() {
       const nextBack = holding(r)
         .filter((q) => reqStatus(q) !== "late")
         .sort((a, b) => a.end.localeCompare(b.end))[0];
-      const backNote = !nextBack ? (holding(r).length ? "Retour en retard" : "") : `Retour prévu ${relDay(nextBack.end)}`;
+      const lateFirst = holding(r).filter((q) => reqStatus(q) === "late").sort((a, b) => a.end.localeCompare(b.end))[0];
+      const backNote = !nextBack ? (lateFirst ? `Retour attendu ${when(lateFirst.end)}, en retard de ${duration(Date.now() - new Date(lateFirst.end))}` : "") : `Retour prévu ${when(nextBack.end)}`;
       const action = manage
         ? `<button class="btn small" data-edit="${r.id}">${ico("edit")} Modifier</button>`
         : book
@@ -1131,7 +1260,7 @@ function weekView() {
             const top = (hourOf(g.s) - H0) * HOUR,
               h = Math.max(22, ((g.e - g.s) / 36e5) * HOUR - 3);
             return `<button class="ev ${g.r.status} ${g.r.user === role ? "mine" : ""} ${h < 46 ? "short" : ""}" data-ev="${g.r.id}" style="--c:${colorOf(g.res.id)};top:${top + 1}px;height:${h}px;left:calc(${off}px + (100% - ${off}px) * ${g.lane / g.lanes} + 3px);width:calc((100% - ${off}px) / ${g.lanes} - 6px)" title="${esc(g.res.name)} · ${hhmm(g.r.start)} – ${hhmm(g.r.end)}">
-              <b>${hhmm(g.s)} – ${hhmm(g.e)}</b><span>${esc(g.res.name.split(" — ")[0])}</span><small>${g.r.status === "pending" ? "En attente · " : ""}${evLabel(g.r)}</small></button>`;
+              <b>${hhmm(g.s)} – ${hhmm(g.e)}</b><span>${esc(g.res.name.split(" — ")[0])}</span><small>${g.r.status === "pending" ? "En cours de validation · " : ""}${evLabel(g.r)}</small></button>`;
           })
           .join("")}
         ${nowLine}
@@ -1173,13 +1302,13 @@ function layoutLanes(segs) {
   if (cluster.length) flush();
 }
 
-function dayTimeline(day, compact = false) {
+function dayTimeline(day, compact = false, only = null) {
   const now = new Date();
   const span = H1 - H0;
   const pct = (h) => ((h - H0) / span) * 100;
   // Rien de sélectionné : le calendrier reste affiché en entier (toutes les lignes, cliquables pour réserver), sans les réservations.
   const none = !compact && reservables().every((r) => planHidden.includes(r.id));
-  const res = none ? reservables() : reservables().filter((r) => compact || !planHidden.includes(r.id));
+  const res = only || (none ? reservables() : reservables().filter((r) => compact || !planHidden.includes(r.id)));
   const all = db.requests.filter(
     (r) => r.kind === "booking" && ["approved", "pending"].includes(r.status) && new Date(r.start) < atHour(day, H1) && new Date(r.end) > atHour(day, H0),
   );
@@ -1199,7 +1328,7 @@ function dayTimeline(day, compact = false) {
           })
           .join("");
         return `<div class="tl-row" style="--c:${colorOf(x.id)}">
-          <div class="tl-name"><i></i><span><b>${esc(x.name.split(" — ")[0])}</b><small>${esc(x.location.split(" · ").pop())}</small></span></div>
+          <div class="tl-name"><i></i><span><b>${esc(x.name.split(" — ")[0])}</b><small>${esc(x.location.split(" · ").pop())}</small></span>${compact ? `<button class="fav ${isFav(x.id) ? "on" : ""}" data-fav="${x.id}" aria-pressed="${isFav(x.id)}" aria-label="${isFav(x.id) ? "Retirer" : "Ajouter"} ${esc(x.name)} ${isFav(x.id) ? "des" : "aux"} favorites" title="${isFav(x.id) ? "Retirer des favorites" : "Ajouter aux favorites"}">${ico("star")}</button>` : ""}</div>
           <div class="tl-track ${x.status !== "available" ? "blocked" : ""}" data-track="${x.id}" data-day="${localISO(day)}"><div class="slot-ghost" aria-hidden="true"></div>${none ? "" : bars}${nowLine}</div>
         </div>`;
       })
@@ -1445,16 +1574,20 @@ function openCart() {
     "Ma sélection",
     items.length
       ? `<form id="request-form" class="modal-body">
+        <p class="req-hint">${REQ} champ obligatoire. Les autres sont facultatifs.</p>
         <div class="cart-list">${items
           .map(
-            (r) => `<div class="cart-item"><span class="res-icon">${ico(r.icon)}</span><span><b>${esc(r.name)}</b><small>${availNow(r)} disponible${availNow(r) > 1 ? "s" : ""} en ce moment</small></span>
+            (r) => `<div class="cart-item"><span class="res-icon">${ico(r.icon)}</span><span><b>${esc(r.name)}</b><small>${availNow(r)} disponible${availNow(r) > 1 ? "s" : ""} en ce moment</small>${lastReport(r.id) ? `<small class="item-note">${ico("alert")} Signalé ${ago(lastReport(r.id).at)} : ${esc(lastReport(r.id).note || CONDITIONS[lastReport(r.id).items[r.id]][0])}</small>` : ""}</span>
           ${usable(r) > 1 ? `<span class="stepper"><button type="button" data-step="-1" data-id="${r.id}" aria-label="Un de moins">−</button><output>${cart[r.id]}</output><button type="button" data-step="1" data-id="${r.id}" aria-label="Un de plus" ${cart[r.id] >= availNow(r) ? "disabled" : ""}>+</button></span>` : ""}
           <button type="button" class="icon-btn ghost" data-remove="${r.id}" aria-label="Retirer ${esc(r.name)}">${ico("close")}</button></div>`,
           )
           .join("")}</div>
-        <div class="form-row"><label class="field">Retrait<input name="start" type="datetime-local" required value="${stamp(1)}" min="${stamp(0, 0)}"></label><label class="field">Retour<input name="end" type="datetime-local" required value="${stamp(3, 18)}"></label></div>
+        <div class="form-row"><label class="field">Retrait ${REQ}<input name="start" type="datetime-local" required value="${stamp(1)}" min="${stamp(0, 0)}"></label><label class="field">Retour ${REQ}<input name="end" type="datetime-local" required value="${stamp(3, 18)}"></label></div>
         ${role === "professor" ? '<label class="field">Groupe ou classe <span class="opt">facultatif</span><input name="group" placeholder="Ex. B2 Création digitale" maxlength="80"></label>' : ""}
-        <label class="field">Pour quel projet ?<textarea name="purpose" rows="2" required placeholder="Quelques mots suffisent" maxlength="300"></textarea></label>
+        <fieldset class="condition purpose-kind"><legend>Pour quel projet ? ${REQ}</legend>${PROJECT_KINDS.map(
+          (t) => `<label><input type="radio" name="kind" value="${t}"><span>${t}</span></label>`,
+        ).join("")}</fieldset>
+        <label class="field">Précisions <span class="opt" id="purpose-opt">facultatif</span><textarea name="purposeText" rows="2" placeholder="Ex. court-métrage de fin d’année" maxlength="300"></textarea></label>
         <p class="form-note ${mustValidate ? "info" : "ok"}">${mustValidate ? "Une partie du matériel doit être validée par l’accueil. Vous recevrez une réponse sous 24 h." : "Le matériel est réservé dès l’envoi. Retrait à l’accueil du bâtiment A."}</p>
         <p id="form-error" class="form-note error" role="alert" hidden></p>
       </form>`
@@ -1483,10 +1616,23 @@ function openCart() {
         refreshCatalog();
         openCart();
         // Les champs déjà remplis survivent au changement de quantité.
-        for (const [k, v] of keep) if ($(`#request-form [name="${k}"]`)) $(`#request-form [name="${k}"]`).value = v;
+        for (const [k, v] of keep) {
+          const els = $$(`#request-form [name="${k}"]`);
+          if (!els.length) continue;
+          if (els[0].type === "radio") els.forEach((x) => (x.checked = x.value === v));
+          else els[0].value = v;
+        }
+        $('#request-form [name="kind"]:checked')?.onchange();
         if (!$("#request-form")) return;
         const out = $(`[data-id="${id}"]`)?.parentElement.querySelector("output");
         pop(out);
+      }),
+  );
+  $$('#request-form [name="kind"]').forEach(
+    (r) =>
+      (r.onchange = () => {
+        const opt = $("#purpose-opt");
+        opt.outerHTML = r.value === "Autre" ? `<span class="opt" id="purpose-opt">${REQ} à préciser</span>` : `<span class="opt" id="purpose-opt">facultatif</span>`;
       }),
   );
   $("#request-form")?.addEventListener("submit", submitLoan);
@@ -1516,12 +1662,17 @@ function submitLoan(e) {
   const data = Object.fromEntries(new FormData(e.target)),
     ids = cartIds(),
     need = { ...cart };
+  const kind = data.kind || "",
+    detailText = (data.purposeText || "").trim();
+  data.purpose = kind === "Autre" ? detailText : kind ? (detailText ? `${kind} · ${detailText}` : kind) : "";
+  delete data.kind;
+  delete data.purposeText;
   let error = "";
   if (!ids.length) error = "Sélectionnez au moins une ressource.";
   else if (new Date(data.start) < new Date()) error = "La date de retrait doit être dans le futur.";
   else if (new Date(data.end) <= new Date(data.start)) error = "Le retour doit être après le retrait.";
   else if (ids.some((id) => usable(resource(id)) < need[id])) error = "Une ressource n’est plus disponible en quantité suffisante.";
-  else if (!data.purpose.trim()) error = "Indiquez en quelques mots votre projet.";
+  else if (!data.purpose) error = kind === "Autre" ? "Précisez votre projet en quelques mots." : "Choisissez le type de projet.";
   else {
     const c = conflict(ids, data.start, data.end, undefined, need);
     if (c)
@@ -1559,12 +1710,35 @@ function submitLoan(e) {
 /* ---------- Détail d’une demande ---------- */
 function steps(r) {
   const s = reqStatus(r);
-  if (s === "rejected") return `<div class="callout pink">${ico("alert")}<span><b>Demande refusée</b>${r.reason ? esc(r.reason) : ""}</span></div>`;
-  if (s === "cancelled") return `<div class="callout">${ico("close")}<span><b>Demande annulée</b></span></div>`;
-  const list = r.kind === "loan" ? ["Envoyée", "Validée", "En cours", "Rendue"] : ["Envoyée", "Validée", "En cours", "Terminée"];
-  const idx = { pending: 1, approved: 2, active: 3, late: 3, returned: 4, finished: 4 }[s] ?? 0;
-  return `<ol class="steps">${list
-    .map((t, i) => `<li class="${i < idx - 1 || idx === list.length ? "done" : i === idx - 1 ? "current" : ""} ${s === "late" && i === 2 ? "late" : ""}"><span>${i < idx - 1 || idx === list.length ? ico("check") : ""}</span>${s === "late" && i === 2 ? "En retard" : t}</li>`)
+  if (s === "rejected")
+    return `<div class="callout pink">${ico("alert")}<span><b>Demande refusée${r.decidedAt ? ` ${when(r.decidedAt)}` : ""}</b>${r.reason ? esc(r.reason) : ""}</span></div>`;
+  if (s === "cancelled")
+    return `<div class="callout">${ico("close")}<span><b>Demande annulée${r.decidedAt ? ` ${when(r.decidedAt)}` : ""}</b></span></div>`;
+  const loan = r.kind === "loan";
+  const idx = { pending: 2, approved: 3, active: 3, late: 3, returned: 4, finished: 4 }[s] ?? 0;
+  const done = (i) => i < idx - 1 || idx === 4;
+  // Chaque étape dit ce qui s’est passé (ou va se passer) et quand.
+  const text = [
+    ["Demande envoyée", `${fmt(r.created, true)}`],
+    s === "pending"
+      ? ["En cours de validation", "Réponse sous 24 h"]
+      : ["Validée", r.approvedAt ? `${fmt(r.approvedAt, true)}` : ""],
+    s === "late"
+      ? [`En retard de ${duration(Date.now() - new Date(r.end))}`, `Retour prévu ${when(r.end)}`]
+      : ["approved", "pending"].includes(s)
+        ? [loan ? "Retrait prévu" : "Début prévu", when(r.start)]
+        : s === "active"
+          ? [loan ? "Emprunt en cours" : "En cours", loan ? `Retour prévu ${when(r.end)}` : `Jusqu’à ${hhmm(r.end)}`]
+          : [loan ? "Emprunt effectué" : "Réservation passée", fmt(r.start, true)],
+    done(3)
+      ? [loan ? "Terminée · rendu" : "Terminée", loan && r.returnAt ? fmt(r.returnAt, true) : fmt(r.end, true)]
+      : [loan ? "Retour prévu" : "Fin prévue", loan ? when(r.end) : hhmm(r.end)],
+  ];
+  return `<ol class="steps">${text
+    .map(
+      ([t, d], i) =>
+        `<li class="${done(i) ? "done" : i === idx - 1 ? "current" : ""} ${s === "late" && i === 2 ? "late" : ""}"><span>${done(i) ? ico("check") : ""}</span><b>${t}</b>${d && i === idx - 1 ? `<small>${d}</small>` : ""}</li>`,
+    )
     .join("")}</ol>`;
 }
 
@@ -1585,27 +1759,78 @@ function detail(id) {
         .join("")}</div>
       <dl class="facts">
         <div><dt>Quand</dt><dd>${dateRange(r)}</dd></div>
-        <div><dt>Demandé par</dt><dd>${esc(r.name)}${r.group ? ` · ${esc(r.group)}` : ""}</dd></div>
+        <div><dt>Demandé par</dt><dd>${esc(r.name)}${r.group ? ` · ${esc(r.group)}` : ""}<small>Demande envoyée ${ago(r.created)} (${fmt(r.created, true)})</small></dd></div>
         ${r.purpose ? `<div><dt>Motif</dt><dd>${esc(r.purpose)}</dd></div>` : ""}
-        ${r.status === "returned" ? `<div><dt>Retour</dt><dd>Contrôlé par ${esc(r.returnBy)} le ${fmt(r.returnAt, true)}</dd></div>` : ""}
+        ${r.status === "returned" ? `<div><dt>Retour</dt><dd>Rendu et contrôlé par ${esc(r.returnBy)} le ${fmt(r.returnAt, true)}</dd></div>` : ""}
+        ${r.returnNote ? `<div><dt>Remarque au retour</dt><dd>${esc(r.returnNote)}</dd></div>` : ""}
       </dl>
-      ${s === "late" ? `<div class="callout pink">${ico("alert")}<span><b>Retour en retard</b>Prévu le ${fmt(r.end, true)}.</span></div>` : ""}
+      ${reportsBlock(r)}
+      ${s === "late" ? `<div class="callout pink">${ico("alert")}<span><b>Retour en retard de ${duration(Date.now() - new Date(r.end))}</b>Il devait être rendu ${when(r.end)} (${fmt(r.end, true)}).</span></div>` : ""}
     </div>`,
-    `${canCancel ? '<button class="btn danger-text" id="cancel-request">Annuler la demande</button>' : ""}
+    `${r.kind === "loan" && ["active", "late"].includes(s) ? '<button class="btn" id="report">Signaler l’état du matériel</button>' : ""}
+     ${canCancel ? '<button class="btn danger-text" id="cancel-request">Annuler la demande</button>' : ""}
      ${role === "admin" && r.status === "pending" ? `<button class="btn" data-reject="${r.id}">Refuser</button><button class="btn primary" data-approve="${r.id}">${ico("check")} Valider</button>` : ""}
      ${role === "admin" && r.kind === "loan" && ["active", "late"].includes(s) ? '<button class="btn primary" id="return">Enregistrer le retour</button>' : ""}
      ${!canCancel && !(role === "admin" && (r.status === "pending" || ["active", "late"].includes(s))) ? '<button class="btn" data-close>Fermer</button>' : ""}`,
   );
   $("#cancel-request")?.addEventListener("click", () => {
-    if (!confirm("Annuler cette demande ?")) return;
+    if (!confirm(`Annuler ${r.kind === "loan" ? "l’emprunt" : "la réservation"} n° ${r.id} prévu ${when(r.start)} ? Cette action est définitive.`)) return;
     r.status = "cancelled";
+    r.decidedAt = new Date().toISOString();
     persist(`Demande n° ${r.id} annulée par ${users[role].name}`);
     closeModal();
     refresh();
     toast("Demande annulée.");
   });
   bindDecisions($("#modal"));
+  $("#report")?.addEventListener("click", () => reportForm(r));
   $("#return")?.addEventListener("click", () => returnForm(r));
+}
+
+function reportsBlock(r) {
+  if (!r.reports?.length) return "";
+  return `<section class="reports"><h3>Remarques sur l’état du matériel</h3>${r.reports
+    .map(
+      (x) => `<div class="report"><b>${esc(x.by)} · ${ago(x.at)}</b><div>${Object.entries(x.items)
+        .map(([id, st]) => `<span class="badge ${CONDITIONS[st][1]}">${esc(resource(+id)?.name || "")} : ${CONDITIONS[st][0]}</span>`)
+        .join(" ")}</div>${x.note ? `<p>${esc(x.note)}</p>` : ""}</div>`,
+    )
+    .join("")}</section>`;
+}
+// Signalement d’état : même formulaire pour l’étudiant (pendant l’emprunt) et l’accueil.
+function reportForm(r) {
+  modal(
+    "Signaler l’état du matériel",
+    `<form id="report-form" class="modal-body">
+      <p class="req-hint">${REQ} champ obligatoire. Votre remarque est transmise à l’accueil et visible lors du retour.</p>
+      ${r.ids
+        .map(
+          (id) => `<fieldset class="condition"><legend>${itemName(r, id)} ${REQ}</legend>${Object.entries(CONDITIONS)
+            .map(([k, [t]], i) => `<label><input type="radio" name="${id}" value="${k}" ${i === 0 ? "checked" : ""}><span>${t}</span></label>`)
+            .join("")}</fieldset>`,
+        )
+        .join("")}
+      <label class="field">Remarque <span class="opt" id="report-opt">facultatif si tout est en bon état</span><textarea name="note" rows="3" maxlength="300" placeholder="Ex. rayure sur l’écran, touche qui coince, chargeur manquant"></textarea></label>
+      <p id="report-error" class="form-note error" role="alert" hidden></p>
+    </form>`,
+    `<button class="btn" data-close>Annuler</button><button class="btn primary" form="report-form" type="submit">Envoyer le signalement</button>`,
+  );
+  $("#report-form").onsubmit = (e) => {
+    e.preventDefault();
+    const { note = "", ...items } = Object.fromEntries(new FormData(e.target));
+    const bad = Object.values(items).some((v) => v !== "ok");
+    if (bad && !note.trim()) {
+      const el = $("#report-error");
+      el.hidden = false;
+      el.textContent = "Décrivez le problème en quelques mots pour que l’accueil puisse agir.";
+      return;
+    }
+    (r.reports ??= []).push({ at: new Date().toISOString(), by: users[role].name, role, items, note: note.trim() });
+    persist(`Signalement sur la demande n° ${r.id} (${users[role].name})${bad ? " : " + note.trim() : " : bon état"}`);
+    closeModal();
+    refresh();
+    toast(bad ? "Signalement envoyé. L’accueil en tient compte." : "Merci, c’est noté : tout est en bon état.");
+  };
 }
 
 function approve(r) {
@@ -1614,6 +1839,7 @@ function approve(r) {
     return toast("Impossible de valider : une ressource n’est plus disponible.", "warn");
   if (new Date(r.end) <= new Date()) return toast("Cette demande a expiré. Refusez-la pour libérer le créneau.", "warn");
   r.status = "approved";
+  r.approvedAt = new Date().toISOString();
   persist(`Demande n° ${r.id} validée par ${users[role].name}`);
   closeModal();
   const card = $(`.approval [data-approve="${r.id}"]`)?.closest(".approval");
@@ -1635,6 +1861,7 @@ function reject(r) {
     e.preventDefault();
     if (role !== "admin") return;
     r.status = "rejected";
+    r.decidedAt = new Date().toISOString();
     r.reason = new FormData(e.target).get("reason").trim();
     persist(`Demande n° ${r.id} refusée : ${r.reason}`);
     closeModal();
@@ -1656,13 +1883,15 @@ function returnForm(r) {
           .map((s, i) => `<label><input type="radio" name="${id}" value="${s}" required ${i === 0 ? "checked" : ""}><span>${s === "RAS" ? "Bon état" : s}</span></label>`)
           .join("")}</fieldset>`,
       )
-      .join("")}<p class="hint">Endommagé : les unités passent en réparation. Perdu : elles sont retirées du stock.</p></form>`,
+      .join("")}${reportsBlock(r)}<label class="field">Remarque <span class="opt">facultatif</span><textarea name="note" rows="2" maxlength="300" placeholder="Ex. accessoire manquant, nettoyage à prévoir"></textarea></label><p class="hint">Endommagé : les unités passent en réparation. Perdu : elles sont retirées du stock.</p></form>`,
     `<button class="btn" data-close>Annuler</button><button class="btn primary" form="return-form">Confirmer le retour</button>`,
   );
   $("#return-form").onsubmit = (e) => {
     e.preventDefault();
     if (role !== "admin") return;
-    r.conditions = Object.fromEntries(new FormData(e.target));
+    const { note = "", ...conds } = Object.fromEntries(new FormData(e.target));
+    r.conditions = conds;
+    r.returnNote = note.trim();
     for (const [id, state] of Object.entries(r.conditions)) {
       const res = resource(+id),
         n = units(r, +id);
@@ -1888,6 +2117,7 @@ function bind() {
   if (view === "categories") bindCategories();
   bindCards();
   bindSlots();
+  bindDashPlan();
   if (view === "planning") bindPlan();
   if (view === "tracking") bindTracking();
 }

@@ -3060,3 +3060,138 @@ dialog.closing::backdrop {
   font-size: 12px;
   font-weight: 700;
 }
+
+/* ---------- Temporalité : chaque étape porte sa date ---------- */
+.steps li {
+  align-content: start;
+  gap: 4px;
+}
+.steps li > b {
+  font-weight: 600;
+  line-height: 1.25;
+}
+.steps li > small {
+  max-width: 14ch;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.3;
+  color: var(--muted);
+}
+.steps li.late > small {
+  color: var(--pink-700);
+}
+.facts dd small {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+}
+@media (max-width: 520px) {
+  .steps li > small {
+    max-width: 11ch;
+  }
+}
+
+/* ---------- Tableau de bord : filtres et favorites ---------- */
+.dash-chips {
+  margin: 0;
+  padding: 12px 20px 8px;
+}
+.chip.on {
+  background: var(--purple-100);
+  border-color: var(--purple);
+  color: var(--purple);
+}
+.chip .icon {
+  width: 14px;
+  height: 14px;
+}
+.chip.on .icon {
+  fill: currentColor;
+}
+.tl-name .fav {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  margin-left: auto;
+  border-radius: 50%;
+  color: var(--muted);
+}
+.tl-name .fav:hover {
+  background: var(--purple-50);
+  color: var(--purple);
+}
+.tl-name .fav .icon {
+  width: 16px;
+  height: 16px;
+}
+.tl-name .fav.on {
+  color: var(--purple);
+}
+.tl-name .fav.on .icon {
+  fill: currentColor;
+}
+.dash-more {
+  display: block;
+  margin: 4px 20px 16px;
+}
+
+/* ---------- Formulaires : obligatoire, état du matériel ---------- */
+.req {
+  margin-left: 2px;
+  color: var(--pink-700);
+  font-weight: 700;
+  text-decoration: none;
+  cursor: help;
+}
+.req-hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.purpose-kind {
+  grid-template-columns: repeat(2, 1fr);
+}
+.purpose-kind legend {
+  grid-column: 1 / -1;
+}
+.cart-item .item-note {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+  color: var(--amber);
+}
+.cart-item .item-note .icon {
+  width: 13px;
+  height: 13px;
+}
+.reports {
+  display: grid;
+  gap: 8px;
+}
+.reports h3 {
+  margin: 0;
+  font-size: 14px;
+}
+.report {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-acc);
+  font-size: 13px;
+}
+.report b {
+  font-weight: 600;
+}
+.report p {
+  margin: 0;
+  color: var(--ink-2);
+}
+.flag {
+  font-style: normal;
+  font-weight: 600;
+  color: var(--amber);
+}
