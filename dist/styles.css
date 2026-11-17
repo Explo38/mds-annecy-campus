@@ -598,14 +598,13 @@ main:focus-visible {
 }
 .dash {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-columns: minmax(0, 1fr);
   gap: 20px;
   align-items: start;
 }
 .dash > * {
   min-width: 0;
 }
-.dash-side .panel + .panel,
 .dash-main .panel + .panel {
   margin-top: 20px;
 }
@@ -3004,4 +3003,60 @@ dialog.closing::backdrop {
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* Tableau de bord : l'aide reste disponible mais repliée */
+.help-fold {
+  padding: 0;
+}
+.help-fold summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 16px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.help-fold summary::-webkit-details-marker {
+  display: none;
+}
+.help-fold summary::after {
+  content: "+";
+  font-size: 20px;
+  line-height: 1;
+  color: var(--purple);
+}
+.help-fold[open] summary::after {
+  content: "–";
+}
+.help-fold ol {
+  margin: 0;
+  padding: 0 24px 20px;
+  list-style: none;
+  counter-reset: s;
+  display: grid;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.help-fold li {
+  counter-increment: s;
+  display: flex;
+  gap: 10px;
+}
+.help-fold li::before {
+  content: counter(s);
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--pink-50);
+  color: var(--pink-700);
+  font-size: 12px;
+  font-weight: 700;
 }

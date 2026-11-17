@@ -486,6 +486,7 @@ function scrollToNow() {
     if (!tl || box.scrollWidth <= box.clientWidth) return;
     const h = Math.min(H1 - 3, Math.max(H0, hourOf(new Date()) - 1));
     const track = $(".tl-track", tl);
+    if (!track) return;
     box.scrollLeft = ((h - H0) / (H1 - H0)) * track.offsetWidth;
   });
 }
@@ -500,7 +501,6 @@ const views = {
       .sort((a, b) => a.start.localeCompare(b.start))
       .slice(0, 5);
     const pending = db.requests.filter((r) => r.status === "pending");
-    const available = db.resources.filter((r) => !r.retired && resStatus(r) === "available").length;
     const todayCount = db.requests.filter(
       (r) => r.kind === "booking" && ["approved", "pending"].includes(r.status) && sameDay(r.start, now),
     ).length;
@@ -551,30 +551,10 @@ const views = {
             <div class="scroll-x">${dayTimeline(dayStart(now), true)}</div>
           </section>
         </div>
-        <div class="dash-side">
-          <section class="panel figures">
-            <div><strong>${available}</strong><span>ressources disponibles</span></div>
-            <div><strong>${todayCount}</strong><span>réservations aujourd’hui</span></div>
-            <div><strong>${role === "admin" ? pending.length : list.filter((r) => r.status === "pending").length}</strong><span>demande${pending.length > 1 ? "s" : ""} en attente</span></div>
-          </section>
-          <section class="panel">
-            <div class="panel-head"><h2>Activité</h2></div>
-            <ul class="feed">${(role === "admin"
-              ? db.events
-              : list
-                  .slice()
-                  .sort((a, b) => b.created.localeCompare(a.created))
-                  .map((r) => ({ text: `${resource(r.ids[0])?.name} · ${labels[reqStatus(r)].toLowerCase()}`, at: r.created }))
-            )
-              .slice(0, 5)
-              .map((e) => `<li><span></span><p>${esc(e.text)}<small>${fmt(e.at, true)}</small></p></li>`)
-              .join("") || "<li class='muted'>Aucune activité.</li>"}</ul>
-          </section>
-          <section class="panel help">
-            <h2>Comment ça marche ?</h2>
-            <ol><li><span><b>Choisissez</b> du matériel ou un créneau.</span></li><li><span><b>Validation</b> immédiate, ou par l’accueil pour certains équipements.</span></li><li><span><b>Récupérez</b> et rendez le matériel à l’accueil du bâtiment A.</span></li></ol>
-          </section>
-        </div>
+        <details class="panel help-fold">
+          <summary>Comment ça marche ?</summary>
+          <ol><li><span><b>Choisissez</b> du matériel ou un créneau.</span></li><li><span><b>Validation</b> immédiate, ou par l’accueil pour certains équipements.</span></li><li><span><b>Récupérez</b> et rendez le matériel à l’accueil du bâtiment A.</span></li></ol>
+        </details>
       </div>`
     );
   },
